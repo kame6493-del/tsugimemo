@@ -318,6 +318,28 @@ section[aria-label="つぎ"] .eyebrow { margin-bottom: 0; }
 .lm-circle span { font-size: var(--fs-xl); font-weight: 700; line-height: 1.1; }
 .lm-circle small { font-size: 0.625rem; opacity: 0.8; }
 .mockwrap { padding: var(--s1) var(--s2) 0; }
+/* Android: ロック画面のお知らせ */
+.lockmock.android { padding: 16px 14px 22px; align-items: stretch; }
+.lm-lock { align-self: center; opacity: 0.8; margin-bottom: 14px; display: grid; place-items: center; }
+.lm-notif {
+  position: relative;
+  background: rgba(255, 255, 255, 0.13);
+  border-radius: 22px; padding: 12px 14px 8px;
+  display: flex; flex-direction: column; gap: 2px; text-align: left; min-width: 0;
+}
+.lm-nhead { display: flex; align-items: center; gap: 6px; font-size: 0.6875rem; opacity: 0.78; margin-bottom: 4px; white-space: nowrap; }
+.lm-sep { opacity: 0.6; }
+.lm-left { margin-left: auto; }
+.lm-appicon { width: 18px; height: 18px; border-radius: 50%; background: var(--shu); display: grid; place-items: center; flex: none; }
+.lm-appicon span { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid #fff; }
+.lm-ntitle { padding-left: 24px; }
+.lm-nbody { font-size: var(--fs-s); opacity: 0.8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 24px; }
+.lm-actions { display: flex; padding: 6px 0 0 16px; }
+.lm-action {
+  font-size: var(--fs-s); font-weight: 700; color: #f3a48f;
+  padding: 6px 8px; border-radius: 16px; transition: background 200ms;
+}
+.lm-action.pressed { background: rgba(255, 255, 255, 0.18); }
 
 /* ---------- ロック画面タブ ---------- */
 .steps { margin: 0 var(--s2); border-top: 1px solid var(--rule); }

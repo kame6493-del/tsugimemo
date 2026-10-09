@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { tap } from '../platform/native';
+import { isAndroid, tap } from '../platform/native';
 import { LockMock } from './LockMock';
 
 /** 最初の説明は3枚まで。いつでも飛ばせる。最後の1枚から、そのまま書きはじめる */
@@ -18,15 +18,19 @@ export function Onboarding({ onDone }: { onDone: (write: boolean) => void }) {
   const pages = [
     {
       title: 'メモしたのに\n見ない、をなくす。',
-      body: '書いた1行が、ロック画面のいちばん上に出ます。スマホを手に取るたび、目に入ります。',
+      body: isAndroid
+        ? '書いた1行が、ロック画面のお知らせとホーム画面のウィジェットに出ます。スマホを手に取るたび、目に入ります。'
+        : '書いた1行が、ロック画面のいちばん上に出ます。スマホを手に取るたび、目に入ります。',
       art: <LockMock items={['牛乳を買って帰る', '歯医者に電話', '図書館の本を返す']} left={3} label="ロック画面の見本。いちばん上に「牛乳を買って帰る」" />,
     },
     {
-      title: '済んだら、\n丸を押すだけ。',
-      body: 'ロックしたまま押せます。済んだ行は消えて、次の行が上がってきます。',
+      title: isAndroid ? '済んだら、\n押すだけ。' : '済んだら、\n丸を押すだけ。',
+      body: isAndroid
+        ? 'お知らせの「済んだ」は、ロックしたまま押せます。済んだ行は消えて、次の行が上がってきます。'
+        : 'ロックしたまま押せます。済んだ行は消えて、次の行が上がってきます。',
       art: pressed
         ? <LockMock items={['歯医者に電話', '図書館の本を返す']} left={2} label="押した後。いちばん上が「歯医者に電話」に変わった見本" />
-        : <LockMock items={['牛乳を買って帰る', '歯医者に電話', '図書館の本を返す']} left={3} pressed={false} label="押す前の見本" />,
+        : <LockMock items={['牛乳を買って帰る', '歯医者に電話', '図書館の本を返す']} left={3} pressed={isAndroid} label="押す前の見本" />,
     },
     {
       title: 'まず1行、\n書いてみましょう。',

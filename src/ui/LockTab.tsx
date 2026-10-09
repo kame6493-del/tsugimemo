@@ -1,13 +1,11 @@
 import { useEffect, useState } from 'react';
 import { FREE_PAPERS, getList, PAPERS, pending, snapshotOf } from '../domain/model';
-import { platform, tap } from '../platform/native';
+import { isAndroid, tap } from '../platform/native';
 import { TsugiWidget } from '../platform/widget';
 import type { Ctx } from './ctx';
 import { IconCheck } from './Icons';
 import { LockMock } from './LockMock';
 import { Sheet } from './Sheets';
-
-const isAndroid = platform === 'android';
 
 export function LockTab({ ctx }: { ctx: Ctx }) {
   const { data, setData, plus, openPaywall, toast } = ctx;
@@ -58,13 +56,13 @@ export function LockTab({ ctx }: { ctx: Ctx }) {
       </section>
 
       <section className="group" aria-labelledby="big">
-        <h2 id="big" className="eyebrow pad">もっと大きく</h2>
+        <h2 id="big" className="eyebrow pad">{isAndroid ? 'ロック画面のお知らせ' : 'もっと大きく'}</h2>
         <label className="switchrow">
           <span className="sw-text">
             <span className="sw-title">{bigName}</span>
             <span className="sw-sub">
               {isAndroid
-                ? '音もバイブもなしで、ロック画面にいまの1行と「済んだ」ボタンを出します。'
+                ? 'いまの1行と次の2行を、ロック画面にお知らせで出します。「済んだ」ボタン付きで、音もバイブもありません。'
                 : 'いまの1行と次の2行を、ロック画面の下に大きく出します。音もバイブもありません。'}
             </span>
           </span>

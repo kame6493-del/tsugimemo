@@ -33,12 +33,12 @@
 ## 確かめたこと
 1. vitest 単体テスト 25本 ALL PASS(足す・済ませる・戻す・消す・並べ替え・7日で片づく・毎朝もどす・リスト・無料に戻す・ウィジェットの中身・ウィジェットで押された分の取り込み・壊れた保存物)
 2. npm run build 通過(ビルド前に dist を1ファイルずつ消す scripts/clean-dist.mjs はお手本と同じ対策。この PC の Node は中身の残った dist を空にする所で exit 127 で落ちる)
-3. Playwright E2E(scripts/e2e.py)ALL PASS。375幅・430幅 × ライト・ダークの4通りで各40項目、計160項目。初回3枚 → 足す(改行・貼り付け・いちばん上に)→ 済ませる → 戻す → ウィジェットで済ませた分の取り込み → 書き直し・並べ替え → ロック画面タブ(大きく出す・断られた時)→ 課金の案内 → 疑似購入 → リストを足す・出すリストを替える → 消したものから戻す → 大きい文字 → 開き直し。横はみ出し・英語の取り残し・コンソールのエラーも毎回検査
+3. Playwright E2E(scripts/e2e.py)ALL PASS。375幅・430幅 × ライト・ダークの4通りと、Android 向け(?platform=android、412幅 × ライト・ダーク)の2通り。Android 向けでは説明・ロック画面タブ・許可の前の説明に iPhone・カスタマイズ・ライブアクティビティ・9:41 が出ないこと、見本がお知らせ(済んだボタン付き)になることも確かめる。初回3枚 → 足す(改行・貼り付け・いちばん上に)→ 済ませる → 戻す → ウィジェットで済ませた分の取り込み → 書き直し・並べ替え → ロック画面タブ(大きく出す・断られた時)→ 課金の案内 → 疑似購入 → リストを足す・出すリストを替える → 消したものから戻す → 大きい文字 → 開き直し。横はみ出し・英語の取り残し・コンソールのエラーも毎回検査
 4. 画面写真を全部 Read で見た(scripts/e2e_out/sheet_*.png)。直した物: 説明1枚目の見出しの変な折り返し、設定の「毎朝もどす時刻」の左余白、大きい文字で入力欄の文が折り返す、見本の下の空き、「上に/下に」ピンの意味が分からない、知らせの文が切れる、ダークで見本の縁が消える。アイコンは丸が花に見えたのでマスを並べ直した
 5. 使いやすさの自己点検表: docs/03_使いやすさ点検.md
 6. Android: cap add android・cap sync・署名済み release AAB と APK。jarsigner -verify 通過、apksigner で証明書 CN=TsugiMemo を確認。AAB の中に TsugiWidgetPlugin / TsugiWidgetProvider / LockNotifier / TsugiStore のクラス、ウィジェットのレイアウトと設定、POST_NOTIFICATIONS、receiver が入っていることを確認。targetSdk 36
 7. iOS: cap add ios・Info.plist(表示名 ツギメモ、NSSupportsLiveActivities、ITSAppUsesNonExemptEncryption=NO、縦向きだけ、iPhone だけ)・entitlements・ワークフロー。pbxproj は Python の OpenStep パーサで読み直し、オブジェクト69個・参照切れ0を確認
-8. ストア素材(store/): アイコン icon_1024.png・play/icon_512.png(ドット絵 24x24 を手で配色)、play/feature_1024x500.png、画面写真 iphone/iphone_1〜5.png(1290x2796)と play/play_1〜5.png(1080x1920)。値段・「無料」は入れていない。説明文 listing_ja.md、プライバシーポリシー privacy.md、データセーフティとレーティング play/data_safety_and_rating.md、テスター募集 tester_post.txt
+8. ストア素材(store/): アイコン icon_1024.png・play/icon_512.png(ドット絵 24x24 を手で配色)、play/feature_1024x500.png、画面写真 iphone/iphone_1〜5.png(1290x2796)と play/play_1〜5.png(1080x1920)。Play 用は 2026-10-10 に Android 版で出る物だけで作り直した(scripts/make_store_play.py・store/mock/android.html。ロック画面のお知らせ・済んだを押す前後・ホーム画面のウィジェット小と中・Android 向けのロック画面タブ・リスト。iPhone のロック画面ウィジェット・9:41・「カスタマイズ」は入れていない)。前の iPhone 寄りの版は play/_ios_like_backup/ に残した。値段・「無料」は入れていない。説明文 listing_ja.md、プライバシーポリシー privacy.md、データセーフティとレーティング play/data_safety_and_rating.md、テスター募集 tester_post.txt
 
 ## iOS の組み立ての不確かさ(正直に)
 この PC は Windows なので、Swift は1度もコンパイルしていない。読み直しはしたが、次のどれかで止まる見込みがある。

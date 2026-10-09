@@ -19,10 +19,11 @@ def check(cond, msg):
         fails.append(msg)
 
 
-def run(p, width, height, theme):
-    out = os.path.join(ROOT, f"{width}_{theme}")
+def run(p, width, height, theme, plat=""):
+    out = os.path.join(ROOT, f"{width}_{theme}" + (f"_{plat}" if plat else ""))
     os.makedirs(out, exist_ok=True)
-    tag = f"[{width} {theme}] "
+    tag = f"[{width} {theme}{(' ' + plat) if plat else ''}] "
+    q = f"?mockbuy=1&theme={theme}" + (f"&platform={plat}" if plat else "")
     errors = []
     b = p.chromium.launch()
     ctx = b.new_context(viewport={"width": width, "height": height}, device_scale_factor=2, locale="ja-JP",
@@ -44,23 +45,35 @@ def run(p, width, height, theme):
         words = [w for w in re.findall(r"[A-Za-z]{2,}", txt) if w not in ("iPhone", "Android")]
         check(not words, tag + f"英語の取り残しが無い({where}: {words[:5]})")
 
+    def no_ios_only(where):
+        # Android では iPhone だけの物(ロック画面ウィジェット・カスタマイズ・ライブアクティビティ・9:41)を出さない
+        if plat != "android":
+            return
+        txt = page.evaluate("document.body.innerText")
+        bad = [w for w in ("iPhone", "カスタマイズ", "ライブアクティビティ", "9:41", "四角・1行・丸") if w in txt]
+        check(not bad, tag + f"iPhone だけの物が出ていない({where}: {bad})")
+
     def top_text():
         return page.locator(".toptext").inner_text() if page.locator(".toptext").count() else None
 
     def pending_rows():
         return [t.strip() for t in page.locator("section[aria-label='つぎ'] .rowtext").all_inner_texts()]
 
-    page.goto(URL + f"?mockbuy=1&theme={theme}")
+    page.goto(URL + q)
     page.evaluate("localStorage.clear()")
-    page.goto(URL + f"?mockbuy=1&theme={theme}")
+    page.goto(URL + q)
 
     # 1. 最初の説明(3枚・飛ばせる)
     page.wait_for_selector(".onb")
     check(page.locator("text=とばす").count() == 1, tag + "最初の説明は飛ばせる")
     shot("01_intro1")
     no_english("説明1")
+    no_ios_only("説明1")
+    if plat == "android":
+        check(page.locator(".lockmock.android .lm-notif").count() == 1 and page.locator(".lm-time").count() == 0, tag + "説明の見本がロック画面のお知らせになる(時計なし)")
     page.click("text=つぎへ")
     shot("02_intro2")
+    no_ios_only("説明2")
     page.click("text=つぎへ")
     check(page.locator("text=とばす").count() == 0, tag + "3枚目で終わる(とばすが消える)")
     shot("03_intro3")
@@ -130,11 +143,18 @@ def run(p, width, height, theme):
     shot("09_lock")
     no_overflow("ロック画面")
     no_english("ロック画面")
+    no_ios_only("ロック画面")
+    if plat == "android":
+        check(page.locator(".locktab .lm-action", has_text="済んだ").count() == 1, tag + "見本のお知らせに「済んだ」ボタンがある")
+        check(page.locator("text=ホーム画面の何もない所を長押し").count() == 1, tag + "置き方が Android の手順になっている")
+    else:
+        check(page.locator(".lm-time").count() == 1, tag + "iPhone の見本はロック画面のウィジェット")
     # 大きく出す: 理由を一文添えてから聞く
     page.click(".switchrow .switch")
     page.wait_for_selector(".sheet")
     check(page.locator(".sheet-text").count() == 1, tag + "許可の前に理由の一文が出る")
     shot("10_big_ask")
+    no_ios_only("許可の前の説明")
     page.click(".sheet .btn.primary")
     page.wait_for_timeout(200)
     check(page.locator(".switchrow .switch").is_checked(), tag + "大きく出すがオンになる")
@@ -222,6 +242,8 @@ with sync_playwright() as p:
     for (w, h) in [(375, 667), (430, 932)]:
         for theme in ["light", "dark"]:
             run(p, w, h, theme)
+    for theme in ["light", "dark"]:
+        run(p, 412, 915, theme, "android")
 
 print()
 print("ALL PASS" if not fails else f"{len(fails)} NG")
