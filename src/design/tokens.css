@@ -1,0 +1,87 @@
+/*
+ * ツギメモのデザインの決まり。
+ * 方向: 帳面と朱。紙の地(生成り)に墨の文字、主役の色は朱1色だけ。罫線で区切り、箱と影は使わない(下から出るシートだけ影あり)。
+ * 文字の段は5つ(13/15/17/22/30)。余白は8刻み(4 は線と文字の微調整だけ)。角丸は3種。
+ */
+:root {
+  color-scheme: light dark;
+
+  /* 色(ライト) */
+  --paper: #f5f1e8;      /* 地 */
+  --sheet: #fffdf8;      /* 入力欄・シート */
+  --ink: #1f1d1a;        /* 本文 */
+  --ink-2: #5d5850;      /* 補足 */
+  --ink-3: #8c867b;      /* 目立たせない文字・済んだ行 */
+  --rule: #ded7c8;       /* 罫線 */
+  --rule-strong: #c9c0ae;
+  --shu: #c43f28;        /* 主役(朱) */
+  --shu-press: #a83421;
+  --shu-soft: #f2ddd4;   /* 朱の薄い地 */
+  --on-shu: #ffffff;
+  --lock-bg: #2b2a28;    /* 画面の中のロック画面の見本 */
+  --lock-ink: #f6f2ea;
+
+  /* 文字 */
+  --font: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Noto Sans CJK JP", system-ui, sans-serif;
+  --fs-s: 0.8125rem;   /* 13 補足・ラベル */
+  --fs-m: 0.9375rem;   /* 15 説明 */
+  --fs-l: 1.0625rem;   /* 17 本文・行 */
+  --fs-xl: 1.375rem;   /* 22 いまの1行・見出し */
+  --fs-xxl: 1.875rem;  /* 30 最初の説明の見出し */
+  --lh: 1.5;
+
+  /* 余白(8刻み) */
+  --s1: 8px;
+  --s2: 16px;
+  --s3: 24px;
+  --s4: 32px;
+  --s5: 40px;
+  --s6: 48px;
+
+  /* 角丸 */
+  --r-s: 6px;
+  --r-m: 12px;
+  --r-round: 999px;
+
+  /* 押せる所の最小(44pt) */
+  --hit: 44px;
+
+  --tabbar: 56px;
+  --inputbar: 64px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #151412;
+    --sheet: #1e1c19;
+    --ink: #eee9df;
+    --ink-2: #b5aea2;
+    --ink-3: #7f796e;
+    --rule: #2f2c28;
+    --rule-strong: #46423b;
+    --shu: #e3644a;
+    --shu-press: #c9533b;
+    --shu-soft: #3a221c;
+    --on-shu: #1a0f0c;
+    --lock-bg: #050505;
+    --lock-ink: #f6f2ea;
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper: #151412;
+  --sheet: #1e1c19;
+  --ink: #eee9df;
+  --ink-2: #b5aea2;
+  --ink-3: #7f796e;
+  --rule: #2f2c28;
+  --rule-strong: #46423b;
+  --shu: #e3644a;
+  --shu-press: #c9533b;
+  --shu-soft: #3a221c;
+  --on-shu: #1a0f0c;
+  --lock-bg: #050505;
+  --lock-ink: #f6f2ea;
+}

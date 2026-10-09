@@ -1,0 +1,12 @@
+{
+  "appId": "jp.tsugimemo.app",
+  "appName": "ツギメモ",
+  "webDir": "dist",
+  "backgroundColor": "#f5f1e8",
+  "android": {
+    "allowMixedContent": false
+  },
+  "ios": {
+    "contentInset": "never"
+  }
+}

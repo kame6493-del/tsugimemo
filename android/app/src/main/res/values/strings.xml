@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ツギメモ</string>
+    <string name="title_activity_main">ツギメモ</string>
+    <string name="package_name">jp.tsugimemo.app</string>
+    <string name="custom_url_scheme">jp.tsugimemo.app</string>
+    <string name="widget_desc">いまの1行。丸を押すと、次が上がります</string>
+</resources>

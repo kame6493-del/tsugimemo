@@ -1,0 +1,23 @@
+node_modules
+dist
+*.log
+.DS_Store
+
+# 署名鍵・API キー・組み立てた成果物は入れない
+releases/
+*.jks
+*.keystore
+*.dpapi
+*.p8
+android/local.properties
+android/.gradle/
+android/app/build/
+android/build/
+ios/App/App/public/
+ios/DerivedData/
+
+# 確認の出力・撮影途中の物
+scripts/e2e_out/
+store/raw/
+scripts/__pycache__/
+docs/research/*.html
