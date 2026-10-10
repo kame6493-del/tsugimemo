@@ -8,7 +8,7 @@ import ActivityKit
 /// アプリ本体とウィジェット拡張の両方に入れる共有コード。
 /// 置き場は App Group(group.jp.tsugimemo.app)の UserDefaults。
 /// - snapshot: アプリ(WebView)が書く JSON。src/domain/model.ts の Snapshot と同じ形
-/// - events: ウィジェット・ライブアクティビティで押された「済んだ」。アプリが開いた時に受け取って消す
+/// - events: ウィジェット・ライブアクティビティで押された「完了」。アプリが開いた時に受け取って消す
 enum TsugiShared {
     static let appGroup = "group.jp.tsugimemo.app"
     static let snapshotKey = "snapshot"
@@ -39,13 +39,13 @@ enum TsugiShared {
         var paper: Paper
         var updatedAt: Double
 
-        static let kinari = Paper(bg: "#F4EFE4", ink: "#22201C", mark: "#C8402A", dark: false)
+        static let kinari = Paper(bg: "#FEFBF3", ink: "#1F2937", mark: "#3B84E6", dark: false)
         static let sample = Snapshot(
-            v: 1, list: "いま",
-            items: [Line(id: "a", text: "牛乳を買って帰る"), Line(id: "b", text: "歯医者に電話"), Line(id: "c", text: "図書館の本を返す")],
+            v: 1, list: "ツギメモ",
+            items: [Line(id: "a", text: "企画書の下書きを進める"), Line(id: "b", text: "ジムに行く"), Line(id: "c", text: "本を30分読む")],
             left: 3, doneToday: 1, paper: kinari, updatedAt: 0
         )
-        static let empty = Snapshot(v: 1, list: "いま", items: [], left: 0, doneToday: 0, paper: kinari, updatedAt: 0)
+        static let empty = Snapshot(v: 1, list: "ツギメモ", items: [], left: 0, doneToday: 0, paper: kinari, updatedAt: 0)
     }
 
     static func read() -> Snapshot {

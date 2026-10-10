@@ -3,6 +3,7 @@ import {
   addItems, addList, applyWidgetEvents, clampToFree, cleanText, clearDone, completeItem, dailyReset, dayKey, deleteItem,
   deletedItems, doneItems, editItem, emptyData, getList, MAX_LISTS, MAX_TEXT, moveItem, normalize, pending, purgeOld,
   removeList, reorderPending, restoreItem, setDaily, shouldAskReview, snapshotOf, splitLines, undoItem,
+  historyOf, daysLeft, restoreEntry,
 } from './model';
 
 const T0 = new Date(2026, 9, 9, 12, 0, 0).getTime();
@@ -149,9 +150,9 @@ describe('リスト', () => {
   it('無料に戻すと、紙は無料の色、出すリストは先頭へ。行は消さない', () => {
     let d = addList(emptyData(T0), '仕事', T0);
     d = addItems(d, d.lists[1].id, 'X', T0);
-    d = { ...d, paper: 'ai', lockListId: d.lists[1].id };
+    d = { ...d, paper: 'soda', lockListId: d.lists[1].id };
     const f = clampToFree(d);
-    expect(f.paper).toBe('kinari');
+    expect(f.paper).toBe('milk');
     expect(f.lockListId).toBe('main');
     expect(pending(f.lists[1]).length).toBe(1);
   });
@@ -166,8 +167,9 @@ describe('ウィジェット', () => {
     expect(s.items.map((i) => i.text)).toEqual(['2', '3', '4', '5', '6', '7']);
     expect(s.left).toBe(7);
     expect(s.doneToday).toBe(1);
-    expect(s.list).toBe('いま');
+    expect(s.list).toBe('ツギメモ');
     expect(s.paper.dark).toBe(false);
+    expect(s.paper.bg).toBe('#FEFBF3');
   });
   it('ウィジェットで押された行を、押された順に済んだにする。知らない id は無視', () => {
     let d = addItems(emptyData(T0), 'main', 'A\nB\nC', T0);
@@ -196,7 +198,7 @@ describe('保存した物を読む', () => {
   it('書き出して読み直すと同じになる', () => {
     let d = addItems(emptyData(T0), 'main', 'A\nB', T0);
     d = completeItem(d, 'main', pending(getList(d, 'main'))[0].id, T0 + 1);
-    d = { ...d, onboarded: true, paper: 'ai', resetHour: 6 };
+    d = { ...d, onboarded: true, paper: 'sakura', resetHour: 6 };
     expect(normalize(JSON.parse(JSON.stringify(d)), T0)).toEqual(JSON.parse(JSON.stringify(d)));
   });
   it('おかしな値は直す', () => {
@@ -206,7 +208,33 @@ describe('保存した物を読む', () => {
     expect(n.lists[0].items[0].doneAt).toBe(T0);
     expect(n.lockListId).toBe('a');
     expect(n.resetHour).toBe(4);
-    expect(n.paper).toBe('kinari');
+    expect(n.paper).toBe('milk');
+  });
+  it('1.0 の紙の名前は、近い色に読み替える', () => {
+    const map: Record<string, string> = { kinari: 'milk', shiro: 'milk', sumi: 'gray', sakura: 'sakura', wakatake: 'mint', ai: 'soda', lemon: 'lemon' };
+    for (const [old, now] of Object.entries(map)) expect(normalize({ paper: old }, T0).paper).toBe(now);
+  });
+});
+
+describe('履歴', () => {
+  it('完了と削除を新しい順に並べ、残りの日数を数える', () => {
+    let d = addItems(emptyData(T0), 'main', 'A\nB\nC', T0);
+    const [a, b] = pending(getList(d, 'main'));
+    d = completeItem(d, 'main', a.id, T0 + 1000);
+    d = deleteItem(d, 'main', b.id, T0 + 2000);
+    const h = historyOf(d);
+    expect(h.map((e) => [e.kind, e.item.text])).toEqual([['deleted', 'B'], ['done', 'A']]);
+    expect(daysLeft(T0, T0 + 1000)).toBe(6);
+    expect(daysLeft(T0, T0 + 6.5 * 86400000)).toBe(0);
+    d = restoreEntry(d, 'main', b.id, T0 + 3000);
+    d = restoreEntry(d, 'main', a.id, T0 + 3000);
+    expect(historyOf(d).length).toBe(0);
+    expect(pending(getList(d, 'main')).length).toBe(3);
+  });
+  it('リストが2つ以上なら、ウィジェットの名前はリストの名前', () => {
+    let d = addList(emptyData(T0), '買い物', T0);
+    d = { ...d, lockListId: d.lists[1].id };
+    expect(snapshotOf(d, T0).list).toBe('買い物');
   });
 });
 

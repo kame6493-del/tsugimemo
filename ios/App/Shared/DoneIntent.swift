@@ -5,7 +5,7 @@ import WidgetKit
 /// ロック画面・ホーム画面のウィジェットの丸を押した時。ロックしたまま動く
 @available(iOS 17.0, *)
 struct DoneIntent: AppIntent {
-    static var title: LocalizedStringResource = "済んだ"
+    static var title: LocalizedStringResource = "完了"
     static var description = IntentDescription("いまの1行を済みにして、次の行を上げます。")
     static var isDiscoverable: Bool = false
     static var openAppWhenRun: Bool = false
@@ -30,7 +30,7 @@ struct DoneIntent: AppIntent {
 /// ライブアクティビティの丸を押した時。iPhone はこれをアプリの中で動かす
 @available(iOS 17.0, *)
 struct DoneLiveIntent: LiveActivityIntent {
-    static var title: LocalizedStringResource = "済んだ"
+    static var title: LocalizedStringResource = "完了"
     static var isDiscoverable: Bool = false
     static var authenticationPolicy: IntentAuthenticationPolicy { .alwaysAllowed }
 

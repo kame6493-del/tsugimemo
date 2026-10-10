@@ -13,7 +13,7 @@ import androidx.core.content.ContextCompat
 
 /**
  * Android の「ロック画面にお知らせで出す」。音もバイブも無い、消えにくいお知らせを1つだけ出す。
- * いまの1行を題に、次の行を本文に、「済んだ」ボタンを付ける。オフにすると取り消す。
+ * いまの1行を題に、次の行を本文に、「完了」ボタンを付ける。オフにすると取り消す。
  */
 object LockNotifier {
     private const val CHANNEL = "lock_line"
@@ -56,11 +56,11 @@ object LockNotifier {
         val rest = s.items.drop(1).take(2).joinToString("\n") { "つぎ  " + it.text }
         val body = if (rest.isEmpty()) "のこり " + s.left else rest
         val b = NotificationCompat.Builder(context, CHANNEL)
+            .also { if (s.list != "ツギメモ") it.setSubText(s.list) } // リストが1つの時はアプリ名と同じなので出さない
             .setSmallIcon(R.drawable.ic_stat_tsugi)
             .setContentTitle(top.text)
             .setContentText(body.lineSequence().first())
             .setStyle(NotificationCompat.BigTextStyle().bigText(body))
-            .setSubText(s.list)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setSilent(true)
@@ -70,7 +70,7 @@ object LockNotifier {
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .setColor(s.mark)
             .setContentIntent(TsugiWidgetProvider.openAppIntent(context))
-            .addAction(0, "済んだ", TsugiWidgetProvider.doneIntent(context, top.id, top.id.hashCode() + 1))
+            .addAction(0, "完了", TsugiWidgetProvider.doneIntent(context, top.id, top.id.hashCode() + 1))
         try {
             nm.notify(ID, b.build())
         } catch (e: SecurityException) {

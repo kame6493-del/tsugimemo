@@ -1,33 +1,43 @@
 /*
- * ツギメモのデザインの決まり。
- * 方向: 帳面と朱。紙の地(生成り)に墨の文字、主役の色は朱1色だけ。罫線で区切り、箱と影は使わない(下から出るシートだけ影あり)。
- * 文字の段は5つ(13/15/17/22/30)。余白は8刻み(4 は線と文字の微調整だけ)。角丸は3種。
+ * ツギメモのデザインの決まり(1.1.0〜。持ち主の見本「デザインシステム」「カラートークン」に寄せた)
+ * 方向: 生成りの地に、白い紙のパネルとちぎった紙の札。主役の色は青1色、ピンは黄。
+ * 押せる丸は灰の輪 → 押すと青く塗られてチェック。いま出ている1行はレモン色の帯。
+ * 文字の段は5つ(13/15/17/22/30)。余白は8刻み。角丸は 10 / 16 / まる。
  */
 :root {
   color-scheme: light dark;
 
   /* 色(ライト) */
-  --paper: #f5f1e8;      /* 地 */
-  --sheet: #fffdf8;      /* 入力欄・シート */
-  --ink: #1f1d1a;        /* 本文 */
-  --ink-2: #5d5850;      /* 補足 */
-  --ink-3: #8c867b;      /* 目立たせない文字・済んだ行 */
-  --rule: #ded7c8;       /* 罫線 */
-  --rule-strong: #c9c0ae;
-  --shu: #c43f28;        /* 主役(朱) */
-  --shu-press: #a83421;
-  --shu-soft: #f2ddd4;   /* 朱の薄い地 */
-  --on-shu: #ffffff;
-  --lock-bg: #2b2a28;    /* 画面の中のロック画面の見本 */
-  --lock-ink: #f6f2ea;
+  --bg: #faf7f0;          /* 生成りの地 */
+  --paper-bg: var(--paper-pick, #fefbf3);  /* 紙の色(アプリが --paper-pick に選んだ紙を入れる) */
+  --card: #ffffff;        /* 紙のパネル・カード */
+  --card-2: #f6f3ec;      /* 押せる所の薄い地(灰のボタン・タブ) */
+  --ink: #1f2937;         /* テキスト */
+  --ink-2: #6b7280;       /* サブテキスト */
+  --ink-3: #a3a8b1;       /* 完了の行・目立たせない文字 */
+  --rule: #ece7dc;        /* 罫線 */
+  --ring: #c3c7cd;        /* 押す前の丸 */
+  --blue: #3b84e6;        /* メイン(見本 #3B82F6 と持ち主の #3B82D9 の間) */
+  --blue-press: #2c6fcc;
+  --blue-sub: #60a5fa;    /* サブ */
+  --blue-soft: #e4effc;   /* 青の薄い地 */
+  --on-blue: #ffffff;
+  --lemon: #fbf2d3;       /* いまの1行の帯 */
+  --pin: #e6b52e;         /* ピンの黄 */
+  --pen: #f3d77a;         /* 題の下の黄色い線 */
+  --red: #e2574c;
+  --red-soft: #fbe5e2;
+  --green: #3aa55c;
+  --shadow: 0 1px 2px rgba(60, 50, 30, .06), 0 4px 14px rgba(60, 50, 30, .07);
+  --shadow-lift: 0 10px 28px rgba(40, 40, 60, .18);
 
   /* 文字 */
-  --font: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Noto Sans CJK JP", system-ui, sans-serif;
+  --font: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Noto Sans CJK JP", "Yu Gothic UI", system-ui, sans-serif;
   --fs-s: 0.8125rem;   /* 13 補足・ラベル */
-  --fs-m: 0.9375rem;   /* 15 説明 */
-  --fs-l: 1.0625rem;   /* 17 本文・行 */
-  --fs-xl: 1.375rem;   /* 22 いまの1行・見出し */
-  --fs-xxl: 1.875rem;  /* 30 最初の説明の見出し */
+  --fs-m: 0.9375rem;   /* 15 説明・行 */
+  --fs-l: 1.0625rem;   /* 17 本文 */
+  --fs-xl: 1.375rem;   /* 22 題 */
+  --fs-xxl: 1.875rem;  /* 30 はじめての題 */
   --lh: 1.5;
 
   /* 余白(8刻み) */
@@ -39,49 +49,63 @@
   --s6: 48px;
 
   /* 角丸 */
-  --r-s: 6px;
-  --r-m: 12px;
+  --r-s: 10px;
+  --r-m: 16px;
   --r-round: 999px;
 
   /* 押せる所の最小(44pt) */
   --hit: 44px;
 
-  --tabbar: 56px;
-  --inputbar: 64px;
+  /* 動き(見本「動きのタイミング」: タップ 0.12秒・完了 0.2秒・スワイプ 0.2秒、ease-out) */
+  --t-tap: .12s;
+  --t-done: .2s;
+  --ease: cubic-bezier(.2, .8, .2, 1);
+
+  --addbar: 72px;
   --safe-b: env(safe-area-inset-bottom, 0px);
   --safe-t: env(safe-area-inset-top, 0px);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --paper: #151412;
-    --sheet: #1e1c19;
-    --ink: #eee9df;
-    --ink-2: #b5aea2;
-    --ink-3: #7f796e;
-    --rule: #2f2c28;
-    --rule-strong: #46423b;
-    --shu: #e3644a;
-    --shu-press: #c9533b;
-    --shu-soft: #3a221c;
-    --on-shu: #1a0f0c;
-    --lock-bg: #050505;
-    --lock-ink: #f6f2ea;
+    --bg: #17181b;
+    --paper-bg: #17181b;
+    --card: #222429;
+    --card-2: #2b2d33;
+    --ink: #eceef1;
+    --ink-2: #a5abb5;
+    --ink-3: #6f7580;
+    --rule: #33363d;
+    --ring: #5d636d;
+    --blue: #5b9bf0;
+    --blue-press: #4686dc;
+    --blue-soft: #1f2f45;
+    --on-blue: #0d1626;
+    --lemon: #3a3420;
+    --red: #ef7468;
+    --red-soft: #3c2422;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3);
+    --shadow-lift: 0 10px 28px rgba(0, 0, 0, .5);
   }
 }
 
 :root[data-theme="dark"] {
-  --paper: #151412;
-  --sheet: #1e1c19;
-  --ink: #eee9df;
-  --ink-2: #b5aea2;
-  --ink-3: #7f796e;
-  --rule: #2f2c28;
-  --rule-strong: #46423b;
-  --shu: #e3644a;
-  --shu-press: #c9533b;
-  --shu-soft: #3a221c;
-  --on-shu: #1a0f0c;
-  --lock-bg: #050505;
-  --lock-ink: #f6f2ea;
+  --bg: #17181b;
+  --paper-bg: #17181b;
+  --card: #222429;
+  --card-2: #2b2d33;
+  --ink: #eceef1;
+  --ink-2: #a5abb5;
+  --ink-3: #6f7580;
+  --rule: #33363d;
+  --ring: #5d636d;
+  --blue: #5b9bf0;
+  --blue-press: #4686dc;
+  --blue-soft: #1f2f45;
+  --on-blue: #0d1626;
+  --lemon: #3a3420;
+  --red: #ef7468;
+  --red-soft: #3c2422;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .3);
+  --shadow-lift: 0 10px 28px rgba(0, 0, 0, .5);
 }

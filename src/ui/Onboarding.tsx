@@ -1,77 +1,136 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { cleanText, MAX_TEXT } from '../domain/model';
 import { isAndroid, tap } from '../platform/native';
+import { IconBell, IconCheck, IconChevronLeft, IconChevronRight, IconHome, IconLock } from './Icons';
 import { LockMock } from './LockMock';
 
-/** 最初の説明は3枚まで。いつでも飛ばせる。最後の1枚から、そのまま書きはじめる */
-export function Onboarding({ onDone }: { onDone: (write: boolean) => void }) {
+/**
+ * はじめての流れ(見本「はじめての流れ」): 1 まずは紹介 → 2 表示の許可 → 3 1行書いて表示場所を選ぶ → 4 すぐ使える
+ * どこからでも飛ばせる。書いた1行はそのままリストのいちばん上に入る。
+ */
+export function Onboarding({ onDone }: { onDone: (r: { text: string; big: boolean; skipped: boolean }) => void }) {
   const [step, setStep] = useState(0);
-  const [pressed, setPressed] = useState(false);
+  const [text, setText] = useState('');
+  const [widget, setWidget] = useState(true);
+  const [big, setBig] = useState(false);
+  const first = cleanText(text);
+  const next = () => { tap(); setStep((s) => s + 1); };
+  const skip = () => { tap(); onDone({ text: '', big: false, skipped: true }); };
 
-  // 2枚目は「丸を押す → 次が上がる」をくり返して見せる
-  useEffect(() => {
-    if (step !== 1) return;
-    setPressed(false);
-    const id = window.setInterval(() => setPressed((p) => !p), 1400);
-    return () => window.clearInterval(id);
-  }, [step]);
+  const placeA = isAndroid
+    ? { icon: <IconHome size={20} />, title: 'ホーム画面に置く', sub: 'ウィジェットを置くと、今やるべき1行がいつでも見える' }
+    : { icon: <IconLock size={20} />, title: 'ロック画面に表示', sub: 'ウィジェットを置くと、今やるべき1行が目に入る' };
+  const placeB = isAndroid
+    ? { icon: <IconBell size={20} />, title: 'ロック画面のお知らせ', sub: '音なしのお知らせで、ロックしたまま完了できる' }
+    : { icon: <IconBell size={20} />, title: 'ロック画面に大きく出す', sub: '紙の札にして大きく。ロックしたまま完了できる' };
 
-  const pages = [
-    {
-      title: 'メモしたのに\n見ない、をなくす。',
-      body: isAndroid
-        ? '書いた1行が、ロック画面のお知らせとホーム画面のウィジェットに出ます。スマホを手に取るたび、目に入ります。'
-        : '書いた1行が、ロック画面のいちばん上に出ます。スマホを手に取るたび、目に入ります。',
-      art: <LockMock items={['牛乳を買って帰る', '歯医者に電話', '図書館の本を返す']} left={3} label="ロック画面の見本。いちばん上に「牛乳を買って帰る」" />,
-    },
-    {
-      title: isAndroid ? '済んだら、\n押すだけ。' : '済んだら、\n丸を押すだけ。',
-      body: isAndroid
-        ? 'お知らせの「済んだ」は、ロックしたまま押せます。済んだ行は消えて、次の行が上がってきます。'
-        : 'ロックしたまま押せます。済んだ行は消えて、次の行が上がってきます。',
-      art: pressed
-        ? <LockMock items={['歯医者に電話', '図書館の本を返す']} left={2} label="押した後。いちばん上が「歯医者に電話」に変わった見本" />
-        : <LockMock items={['牛乳を買って帰る', '歯医者に電話', '図書館の本を返す']} left={3} pressed={isAndroid} label="押す前の見本" />,
-    },
-    {
-      title: 'まず1行、\n書いてみましょう。',
-      body: '買い物、電話、持ち物。思いついた順で大丈夫です。登録もいりません。',
-      art: null,
-    },
-  ];
-  const p = pages[step];
-  const last = step === pages.length - 1;
+  if (step === 0) {
+    return (
+      <div className="onb welcome">
+        <img className="onb-sky" src="./img/sky.jpg" alt="" draggable={false} />
+        <div className="onb-top"><span /><button type="button" className="btn text" onClick={skip}>とばす</button></div>
+        <div className="welcome-body">
+          <img className="welcome-logo" src="./img/logo_paper.png" alt="" draggable={false} />
+          <h1>ツギメモ</h1>
+          <p className="welcome-sub">見ないで忘れる、をなくす。</p>
+          <ul className="checks">
+            {[isAndroid ? 'ロック画面とホーム画面に表示' : 'ロック画面に表示', '1行で書ける', '登録なしで使える', '広告なしでずっと快適'].map((t) => (
+              <li key={t}><span className="ck"><IconCheck size={14} /></span>{t}</li>
+            ))}
+          </ul>
+        </div>
+        <div className="onb-foot">
+          <button type="button" className="btn primary wide big" onClick={next}><span>さっそくはじめる</span><IconChevronRight /></button>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === 1) {
+    return (
+      <div className="onb">
+        <Head onBack={() => setStep(0)} />
+        <h2 className="onb-lead">メモを見逃さないために<br />次の設定をお願いします。</h2>
+        <div className="onb-cards">
+          <PlaceCard {...placeA} on={widget} onClick={() => { tap(); setWidget((v) => !v); }} />
+          <PlaceCard {...placeB} title={`${placeB.title}(任意)`} on={big} onClick={() => { tap(); setBig((v) => !v); }} />
+        </div>
+        <p className="note center">あとから「設定」の「表示場所」でも変えられます。</p>
+        <div className="onb-foot">
+          <button type="button" className="btn primary wide big" onClick={next}><span>設定に進む</span><IconChevronRight /></button>
+          <button type="button" className="btn text" onClick={() => { tap(); setWidget(false); setBig(false); setStep(2); }}>あとで設定する</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === 2) {
+    const len = Array.from(first).length;
+    return (
+      <div className="onb">
+        <Head onBack={() => setStep(1)} />
+        <ol className="stepper" aria-label="3つのうち1つめ">
+          {['メモを書く', '表示場所', '完了'].map((t, i) => <li key={t} className={i === 0 ? 'on' : ''}><span className="num">{i + 1}</span>{t}</li>)}
+        </ol>
+        <h2 className="onb-h">最初のメモを書きましょう</h2>
+        <p className="onb-p">今やるべきことを、1行で。あとからいつでも変更できます。</p>
+        <input
+          className="firstfield"
+          value={text}
+          maxLength={MAX_TEXT * 2}
+          placeholder="例: 企画書の下書きを進める"
+          aria-label="最初のメモ"
+          enterKeyHint="done"
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) { e.preventDefault(); (e.target as HTMLInputElement).blur(); } }}
+        />
+        <p className={`counter num${len >= MAX_TEXT ? ' full' : ''}`}>{len}/{MAX_TEXT}</p>
+        <h2 className="onb-h">どこに表示しますか?</h2>
+        <div className="onb-cards">
+          <PlaceCard {...placeA} on={widget} onClick={() => { tap(); setWidget((v) => !v); }} small />
+          <PlaceCard {...placeB} on={big} onClick={() => { tap(); setBig((v) => !v); }} small />
+        </div>
+        <div className="onb-foot">
+          <button type="button" className="btn primary wide big" onClick={next}><span>これで始める</span><IconChevronRight /></button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="onb" aria-live="polite">
-      <div className="onb-top">
-        <span className="onb-count num" aria-label={`${pages.length}枚中${step + 1}枚目`}>{step + 1} / {pages.length}</span>
-        {!last && <button type="button" className="btn text" onClick={() => { tap(); onDone(false); }}>とばす</button>}
-      </div>
-      <div className="onb-art">{p.art ?? <WriteArt />}</div>
-      <div className="onb-text">
-        <h1>{p.title}</h1>
-        <p>{p.body}</p>
-      </div>
+    <div className="onb ready">
+      <Head onBack={() => setStep(2)} />
+      <h2 className="onb-h center">すぐ使えます</h2>
+      <p className="onb-p center">{isAndroid ? 'ロック画面とホーム画面に、今やるべき1行が出ます。' : 'ロック画面に、今やるべき1行が出ます。'}丸を押すと完了して、次の1行が上がります。</p>
+      <div className="onb-art"><LockMock items={[first || '企画書の下書きを進める', 'ジムに行く', '本を30分読む']} demo label="ロック画面の見本。丸を押すと次の行が上がる" /></div>
+      {widget && (
+        <p className="note center">
+          {isAndroid ? 'ホーム画面の何もない所を長押し →「ウィジェット」→「ツギメモ」で置けます。' : 'ロック画面を長押し →「カスタマイズ」→ 時計の下の枠 →「ツギメモ」で置けます。'}
+        </p>
+      )}
       <div className="onb-foot">
-        <div className="dots" aria-hidden="true">
-          {pages.map((_, i) => <span key={i} className={i === step ? 'on' : ''} />)}
-        </div>
-        <button type="button" className="btn primary wide" onClick={() => { tap(); if (last) onDone(true); else setStep(step + 1); }}>
-          {last ? '書きはじめる' : 'つぎへ'}
-        </button>
+        <button type="button" className="btn primary wide big" onClick={() => { tap(); onDone({ text: first, big, skipped: false }); }}><span>{first ? 'はじめる' : '書きはじめる'}</span><IconChevronRight /></button>
       </div>
     </div>
   );
 }
 
-/** 3枚目の絵: 罫線の紙に1行目だけ朱の丸 */
-function WriteArt() {
+function Head({ onBack }: { onBack: () => void }) {
   return (
-    <div className="writeart" aria-hidden="true">
-      <div className="wa-line first"><span className="wa-ring" /><span className="wa-caret" /></div>
-      <div className="wa-line" />
-      <div className="wa-line" />
-      <div className="wa-line" />
+    <div className="onb-head">
+      <button type="button" className="iconbtn" aria-label="もどる" onClick={() => { tap(); onBack(); }}><IconChevronLeft /></button>
+      <p>ツギメモ</p>
+      <span className="iconbtn-space" />
     </div>
+  );
+}
+
+function PlaceCard({ icon, title, sub, on, onClick, small }: { icon: React.ReactNode; title: string; sub: string; on: boolean; onClick: () => void; small?: boolean }) {
+  return (
+    <button type="button" className={`placecard${on ? ' on' : ''}${small ? ' small' : ''}`} aria-pressed={on} onClick={onClick}>
+      <span className="pc-icon">{icon}</span>
+      <span className="pc-main"><b>{title}</b><small>{sub}</small></span>
+      <span className="pc-check">{on ? <IconCheck size={14} /> : null}</span>
+    </button>
   );
 }

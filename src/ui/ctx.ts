@@ -3,7 +3,10 @@ import type { Billing } from '../platform/billing';
 
 export type PaywallReason = 'lists' | 'daily' | 'paper' | 'lockList' | 'settings';
 
-export type Toast = { text: string; undo?: () => void };
+/** 見本のトースト: 保存(緑の丸)・失敗(赤の!)・お知らせ(灰の i)・元に戻した(黒地) */
+export type Toast = { text: string; kind?: 'ok' | 'err' | 'info' | 'dark'; undo?: () => void };
+
+export type Screen = 'list' | 'history' | 'settings' | 'display';
 
 export type Ctx = {
   data: AppData;
@@ -12,4 +15,6 @@ export type Ctx = {
   billing: Billing;
   openPaywall: (r: PaywallReason) => void;
   toast: (t: Toast) => void;
+  go: (s: Screen) => void;
+  openPapers: () => void;
 };

@@ -8,5 +8,5 @@ export const APP_CONFIG = {
   /** サポートページ(不具合・要望の窓口)。公開は残りの作業。RELEASE.md 参照 */
   supportUrl: 'https://kame6493-del.github.io/tsugimemo/',
   privacyUrl: 'https://kame6493-del.github.io/tsugimemo/privacy.html',
-  version: '1.0.0',
+  version: '1.1.0',
 };

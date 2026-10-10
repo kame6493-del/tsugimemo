@@ -10,7 +10,7 @@ import android.view.View
 import android.widget.RemoteViews
 
 /**
- * ホーム画面のウィジェット。いちばん上の1行を大きく、丸を押すと済んで次が上がる。下に次の2行。
+ * ホーム画面のウィジェット。いちばん上の1行を大きく、灰の丸を押すと完了して次が上がる。下に次の2行。
  * 大きさを変えると、入らない行は自然に切れる(高さに合わせて行数が減る)。
  */
 class TsugiWidgetProvider : AppWidgetProvider() {
@@ -61,7 +61,7 @@ class TsugiWidgetProvider : AppWidgetProvider() {
             v.setInt(R.id.w_bg, "setColorFilter", s.bg)
             v.setTextViewText(R.id.w_list, s.list)
             v.setTextColor(R.id.w_list, s.ink)
-            v.setTextViewText(R.id.w_left, if (s.left > 0) "のこり ${s.left}" else "")
+            v.setTextViewText(R.id.w_left, if (s.left > 1) "のこり ${s.left}" else "")
             v.setTextColor(R.id.w_left, s.ink)
             v.setOnClickPendingIntent(R.id.w_root, openAppIntent(context))
 
@@ -79,7 +79,7 @@ class TsugiWidgetProvider : AppWidgetProvider() {
             }
             v.setViewVisibility(R.id.w_sub, View.GONE)
             v.setViewVisibility(R.id.w_check, View.VISIBLE)
-            v.setInt(R.id.w_check, "setColorFilter", s.mark)
+            v.setInt(R.id.w_check, "setColorFilter", 0xFFB9BEC6.toInt())
             v.setOnClickPendingIntent(R.id.w_check, doneIntent(context, top.id, top.id.hashCode()))
             v.setTextViewText(R.id.w_top, top.text)
             v.setTextColor(R.id.w_top, s.ink)
@@ -90,7 +90,7 @@ class TsugiWidgetProvider : AppWidgetProvider() {
                     v.setViewVisibility(rid, View.GONE)
                 } else {
                     v.setViewVisibility(rid, View.VISIBLE)
-                    v.setTextViewText(rid, "つぎ  " + line.text)
+                    v.setTextViewText(rid, line.text)
                     v.setTextColor(rid, s.ink)
                 }
             }

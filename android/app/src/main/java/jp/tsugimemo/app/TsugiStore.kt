@@ -7,7 +7,7 @@ import org.json.JSONObject
 /**
  * アプリ(WebView)とウィジェット・お知らせの間で共有する置き場。中身は SharedPreferences の JSON 文字列。
  * - snapshot: アプリが書く。src/domain/model.ts の Snapshot と同じ形
- * - events: ウィジェットやお知らせで押された「済んだ」。アプリが開いた時に takeEvents で受け取って消す
+ * - events: ウィジェットやお知らせで押された「完了」。アプリが開いた時に takeEvents で受け取って消す
  */
 object TsugiStore {
     private const val PREFS = "tsugimemo_widget"
@@ -47,16 +47,16 @@ object TsugiStore {
             }
             val p = o.optJSONObject("paper") ?: JSONObject()
             Snap(
-                list = o.optString("list", "いま"),
+                list = o.optString("list", "ツギメモ"),
                 items = items,
                 left = o.optInt("left", items.size),
-                bg = parse(p.optString("bg"), 0xFFF4EFE4.toInt()),
-                ink = parse(p.optString("ink"), 0xFF22201C.toInt()),
-                mark = parse(p.optString("mark"), 0xFFC8402A.toInt()),
+                bg = parse(p.optString("bg"), 0xFFFEFBF3.toInt()),
+                ink = parse(p.optString("ink"), 0xFF1F2937.toInt()),
+                mark = parse(p.optString("mark"), 0xFF3B84E6.toInt()),
                 dark = p.optBoolean("dark", false),
             )
         } catch (e: Exception) {
-            Snap("いま", emptyList(), 0, 0xFFF4EFE4.toInt(), 0xFF22201C.toInt(), 0xFFC8402A.toInt(), false)
+            Snap("ツギメモ", emptyList(), 0, 0xFFFEFBF3.toInt(), 0xFF1F2937.toInt(), 0xFF3B84E6.toInt(), false)
         }
     }
 

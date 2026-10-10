@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>ツギメモ ストア用のロック画面・ホーム画面</title>
+<!--
+  ストアの画面写真に使う「端末の画面」(1.1.0)。地の絵は持ち主の見本から切り出した物(public/img)。
+  #lock-ios     iPhone のロック画面: 時計の下に四角のウィジェット、下に「大きく出す」の紙の札(ライブアクティビティ)
+  #done-ios     同じ。札の丸を押して、次の行に替わった所
+  #home-ios     iPhone のホーム画面: 中と小のウィジェット
+  #lock-android Android のロック画面のお知らせ(時計・ウィジェットは描かない)
+  #home-android Android のホーム画面のウィジェット
+  文と寸法は TsugiWidget.swift / TsugiLiveActivity.swift / widget_tsugi.xml / LockNotifier.kt に合わせた
+-->
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 430px; height: 932px; overflow: hidden; }
+  body { font-family: "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", "Meiryo", sans-serif; color: #1F2937; position: relative; }
+  .bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .scr { display: none; position: absolute; inset: 0; }
+  .scr.on { display: block; }
+  .bg { filter: saturate(1.05); }
+  #s-lock-ios .bg, #s-lock-android .bg { filter: brightness(.96) saturate(1.1); }
+  .clock { position: absolute; left: 0; right: 0; top: 120px; text-align: center; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.12); }
+  .clock span { font-size: 22px; font-weight: 600; } .clock b { display: block; font-size: 104px; font-weight: 500; line-height: 1.05; letter-spacing: -1px; }
+  .acc { position: absolute; left: 50%; top: 278px; transform: translateX(-50%); width: 300px; color: #fff; display: flex; gap: 12px; }
+  .acc .r { flex: 1; background: rgba(255,255,255,.22); backdrop-filter: blur(8px); border-radius: 18px; padding: 10px 12px; }
+  .acc .t1 { display: flex; gap: 6px; align-items: center; font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; }
+  .acc .t1 i { flex: none; width: 14px; height: 14px; border: 1.8px solid #fff; border-radius: 50%; }
+  .acc .t2 { font-size: 13px; opacity: .8; margin-left: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .acc .c { flex: none; width: 80px; height: 80px; border-radius: 50%; background: rgba(255,255,255,.22); display: grid; place-items: center; text-align: center; line-height: 1; }
+  .acc .c b { font-size: 26px; display: block; } .acc .c small { font-size: 10px; font-weight: 700; }
+  .live { position: absolute; left: 14px; right: 14px; top: 560px; background: #FEFBF3; border-radius: 26px; padding: 22px 22px 20px 26px; display: flex; align-items: center; gap: 12px; box-shadow: 0 8px 26px rgba(30,40,60,.22); }
+  .live .pin { position: absolute; left: 30px; top: -6px; width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #f6d36b, #e6b52e 60%, #b98a12); box-shadow: 0 2px 2px rgba(0,0,0,.3); }
+  .live .lb { font-size: 13px; color: #8a8f98; letter-spacing: .06em; } .live .lt { font-size: 24px; font-weight: 800; line-height: 1.35; margin-top: 6px; } .live .ln { font-size: 14px; color: #6b7280; margin-top: 6px; }
+  .live .big { flex: none; width: 58px; height: 58px; border-radius: 50%; border: 3.5px solid #3B84E6; margin-left: auto; display: grid; place-items: center; color: #fff; transition: all .2s; }
+  .live .big.on { background: #3B84E6; border-color: #fff; box-shadow: 0 0 0 9px rgba(59,132,230,.28); }
+  .live .big svg { width: 28px; height: 28px; }
+  .tap { position: absolute; right: 30px; top: 720px; color: #2c3b52; font-size: 18px; font-weight: 800; text-align: right; line-height: 1.6; background: linear-gradient(transparent 62%, rgba(243,215,122,.85) 62%); padding: 0 4px; }
+  .corner { position: absolute; bottom: 44px; width: 52px; height: 52px; border-radius: 50%; background: rgba(40,40,40,.45); display: grid; place-items: center; color: #fff; }
+  .homebar { position: absolute; left: 50%; bottom: 10px; width: 140px; height: 5px; border-radius: 3px; background: rgba(255,255,255,.9); transform: translateX(-50%); }
+  .status { position: absolute; top: 16px; left: 34px; right: 30px; display: flex; justify-content: space-between; color: #fff; font-weight: 600; font-size: 16px; }
+  .wgrid { position: absolute; left: 22px; right: 22px; top: 92px; display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+  .w { background: #FEFBF3; border-radius: 26px; padding: 18px 18px 14px; box-shadow: 0 6px 20px rgba(30,40,60,.16); }
+  .w.m { grid-column: 1 / 3; height: 180px; } .w.s { height: 180px; }
+  .wt { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; } .wt span { font-weight: 400; font-size: 12px; opacity: .5; }
+  .rule { height: 1px; background: rgba(31,41,55,.12); margin: 9px 0; }
+  .top { display: flex; gap: 9px; align-items: flex-start; } .ringc { flex: none; width: 22px; height: 22px; border-radius: 50%; border: 2.4px solid #B9BEC6; margin-top: 1px; }
+  .tt { font-weight: 800; line-height: 1.35; font-size: 18px; } .s .tt { font-size: 16px; }
+  .nx { font-size: 13.5px; opacity: .66; margin: 5px 0 0 31px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .apps { position: absolute; left: 22px; right: 22px; top: 520px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 26px 20px; justify-items: center; }
+  .app { width: 66px; height: 66px; border-radius: 16px; background: rgba(255,255,255,.55); backdrop-filter: blur(6px); }
+  .dock { position: absolute; left: 14px; right: 14px; bottom: 24px; height: 96px; border-radius: 34px; background: rgba(255,255,255,.35); backdrop-filter: blur(10px); display: flex; justify-content: space-around; align-items: center; }
+  .dock .app { background: rgba(255,255,255,.75); }
+  .notif { position: absolute; left: 14px; right: 14px; top: 250px; background: rgba(255,255,255,.95); border-radius: 30px; padding: 20px 22px 16px; box-shadow: 0 6px 22px rgba(30,40,60,.18); }
+  .nh { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #4b5563; } .nh img { width: 22px; height: 22px; border-radius: 6px; }
+  .nt { font-size: 21px; font-weight: 800; margin-top: 8px; } .nn { font-size: 15px; color: #4b5563; margin-top: 4px; }
+  .na { display: inline-flex; align-items: center; gap: 6px; margin-top: 14px; padding: 8px 20px; border-radius: 99px; background: #e9eef6; color: #3B84E6; font-weight: 800; font-size: 15px; }
+  .alock { position: absolute; left: 50%; top: 60px; transform: translateX(-50%); color: #fff; }
+  .atime { position: absolute; left: 30px; top: 100px; color: #fff; font-size: 18px; font-weight: 600; text-shadow: 0 1px 3px rgba(0,0,0,.15); }
+  .agrid { position: absolute; left: 18px; right: 18px; top: 90px; display: flex; flex-direction: column; gap: 22px; }
+  .agrid .w { border-radius: 24px; }
+</style>
+</head>
+<body>
+<section class="scr" id="s-lock-ios">
+  <img class="bg" src="../../public/img/sky.jpg" alt="">
+  <div class="clock"><span>4月12日 土曜日</span><b>9:41</b></div>
+  <div class="acc"><div class="r"><div class="t1"><i></i><span class="topname">企画書の下書きを進める</span></div><div class="t2">つぎ  ジムに行く</div><div class="t2">つぎ  本を30分読む</div></div><div class="c"><div><b class="left">3</b><small>のこり</small></div></div></div>
+  <div class="live"><span class="pin"></span><div><div class="lb">つぎにやること</div><div class="lt topname">企画書の下書きを進める</div><div class="ln nextname">つぎ  ジムに行く</div></div><span class="big on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5.5 12.5 4 4 9-9.5"/></svg></span></div>
+  <div class="tap">ロックしたまま<br>丸を押すと完了</div>
+  <div class="corner" style="left:46px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M9 2h6l-1 6h-4zM10 8h4v13h-4z"/></svg></div>
+  <div class="corner" style="right:46px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><circle cx="12" cy="13.5" r="3.5"/><path d="M9 7l1.5-3h3L15 7"/></svg></div>
+  <div class="homebar"></div>
+</section>
+
+<section class="scr" id="s-home-ios">
+  <img class="bg" src="../../public/img/sky.jpg" alt="">
+  <div class="status"><span>9:41</span><span>●●●</span></div>
+  <div class="wgrid">
+    <div class="w m"><div class="wt">ツギメモ<span>のこり 3</span></div><div class="rule"></div><div class="top"><span class="ringc"></span><span class="tt">企画書の下書きを進める</span></div><div class="nx">ジムに行く</div><div class="nx">本を30分読む</div></div>
+    <div class="w s"><div class="wt">ツギメモ<span>のこり 3</span></div><div class="rule"></div><div class="top"><span class="ringc"></span><span class="tt">企画書の下書きを進める</span></div></div>
+    <div class="w s" style="background:#E3F2FF"><div class="wt">買い物<span>のこり 2</span></div><div class="rule"></div><div class="top"><span class="ringc"></span><span class="tt">たまごと牛乳</span></div></div>
+  </div>
+  <div class="apps"><i class="app"></i><i class="app"></i><i class="app"></i><i class="app"></i><i class="app"></i><i class="app"></i><i class="app"></i><i class="app"></i></div>
+  <div class="dock"><i class="app"></i><i class="app"></i><i class="app"></i><i class="app"></i></div>
+</section>
+
+<section class="scr" id="s-lock-android">
+  <img class="bg" src="../../public/img/sky.jpg" alt="">
+  <div class="alock"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="5" y="10.5" width="14" height="10" rx="2.5" fill="#fff"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></svg></div>
+  <div class="notif"><div class="nh"><img src="../../public/img/app_icon.png" alt="">ツギメモ</div><div class="nt topname">企画書の下書きを進める</div><div class="nn">つぎ  ジムに行く</div><div class="nn">つぎ  本を30分読む</div><span class="na"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="m5.5 12.5 4 4 9-9.5"/></svg>完了</span></div>
+  <div class="tap" style="top:520px">ロックしたまま<br>「完了」で次の行へ</div>
+</section>
+
+<section class="scr" id="s-home-android">
+  <img class="bg" src="../../public/img/sky.jpg" alt="">
+  <div class="agrid">
+    <div class="w" style="height:190px"><div class="wt">ツギメモ<span>のこり 3</span></div><div class="rule"></div><div class="top"><span class="ringc" style="width:26px;height:26px"></span><span class="tt">企画書の下書きを進める</span></div><div class="nx" style="margin-left:35px">ジムに行く</div><div class="nx" style="margin-left:35px">本を30分読む</div></div>
+    <div style="display:flex;gap:22px">
+      <div class="w s" style="flex:1"><div class="wt">ツギメモ</div><div class="rule"></div><div class="top"><span class="ringc" style="width:26px;height:26px"></span><span class="tt">企画書の下書きを進める</span></div></div>
+      <div class="w s" style="flex:1;background:#EBF7EA"><div class="wt">買い物</div><div class="rule"></div><div class="top"><span class="ringc" style="width:26px;height:26px"></span><span class="tt">たまごと牛乳</span></div></div>
+    </div>
+  </div>
+  <div class="dock" style="height:86px;border-radius:30px"><i class="app" style="border-radius:50%"></i><i class="app" style="border-radius:50%"></i><i class="app" style="border-radius:50%"></i><i class="app" style="border-radius:50%"></i></div>
+</section>
+<script>
+  const k = (location.hash || '#lock-ios').slice(1);
+  const done = k === 'done-ios';
+  document.getElementById('s-' + (done ? 'lock-ios' : k)).classList.add('on');
+  if (done) {
+    document.querySelectorAll('.topname').forEach((e) => { e.textContent = 'ジムに行く'; });
+    document.querySelector('.nextname').textContent = 'つぎ  本を30分読む';
+    document.querySelectorAll('.t2')[0].textContent = 'つぎ  本を30分読む';
+    document.querySelectorAll('.t2')[1].textContent = 'つぎ  買い物(たまご・牛乳)';
+    document.querySelector('.left').textContent = '2';
+    document.querySelector('.big').classList.remove('on');
+    document.querySelector('.tap').innerHTML = '完了すると<br>次の行がスッと上がる';
+  }
+</script>
+</body>
+</html>

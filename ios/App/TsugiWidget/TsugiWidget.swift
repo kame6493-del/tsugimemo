@@ -61,10 +61,10 @@ struct TsugiWidgetView: View {
             LockCircleView(snap: snap)
                 .containerBackground(for: .widget) { AccessoryWidgetBackground() }
         case .systemMedium:
-            HomeView(snap: snap, nextCount: 3, topFont: .system(size: 20, weight: .bold))
+            HomeView(snap: snap, nextCount: 2, topFont: .system(size: 17, weight: .bold))
                 .containerBackground(for: .widget) { Color(hex: snap.paper.bg) }
         default:
-            HomeView(snap: snap, nextCount: 2, topFont: .system(size: 16, weight: .bold))
+            HomeView(snap: snap, nextCount: 0, topFont: .system(size: 15, weight: .bold))
                 .containerBackground(for: .widget) { Color(hex: snap.paper.bg) }
         }
     }
@@ -85,7 +85,7 @@ struct DoneButton: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("済んだ")
+        .accessibilityLabel("完了")
     }
 }
 
@@ -111,7 +111,7 @@ struct LockRectView: View {
                         .padding(.leading, 19)
                 }
             } else {
-                Text(snap.left > 0 ? "続きはアプリで" : "ぜんぶ済みました")
+                Text(snap.left > 0 ? "続きはアプリで" : "ぜんぶ完了しました")
                     .font(.system(size: 15, weight: .bold))
                 Text("次の1行を書く")
                     .font(.system(size: 12))
@@ -137,7 +137,8 @@ struct LockCircleView: View {
     }
 }
 
-/// ホーム画面の小・中。紙の色の上に、いまの1行と丸、つぎの行
+/// ホーム画面の小・中(見本の「ウィジェット」: 紙の札に「ツギメモ」、線、灰の丸といまの1行)。
+/// 中はつぎの2行も薄く出す。紙の色はアプリで選んだ色
 struct HomeView: View {
     let snap: TsugiShared.Snapshot
     let nextCount: Int
@@ -145,49 +146,55 @@ struct HomeView: View {
 
     var body: some View {
         let ink = Color(hex: snap.paper.ink)
-        let mark = Color(hex: snap.paper.mark)
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 0) {
             HStack {
                 Text(snap.list)
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: 12, weight: .bold))
                     .lineLimit(1)
                 Spacer(minLength: 4)
-                if snap.left > 0 {
+                if snap.left > 1 {
                     Text("のこり \(snap.left)")
-                        .font(.system(size: 12).monospacedDigit())
+                        .font(.system(size: 11).monospacedDigit())
+                        .foregroundStyle(ink.opacity(0.5))
                 }
             }
-            .foregroundStyle(ink.opacity(0.62))
+            .foregroundStyle(ink)
+            Rectangle()
+                .fill(ink.opacity(0.12))
+                .frame(height: 1)
+                .padding(.vertical, 8)
 
             if let top = snap.items.first {
-                HStack(alignment: .top, spacing: 4) {
-                    DoneButton(id: top.id, size: 18, color: mark)
+                HStack(alignment: .top, spacing: 6) {
+                    DoneButton(id: top.id, size: 20, color: ink.opacity(0.32))
                         .padding(.leading, -4)
-                        .padding(.top, -2)
+                        .padding(.top, -3)
                     Text(top.text)
                         .font(topFont)
                         .foregroundStyle(ink)
-                        .lineLimit(2)
+                        .lineLimit(3)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                Rectangle()
-                    .fill(ink.opacity(0.18))
-                    .frame(height: 1)
-                VStack(alignment: .leading, spacing: 3) {
-                    ForEach(Array(snap.items.dropFirst().prefix(nextCount)), id: \.id) { line in
-                        Text(line.text)
-                            .font(.system(size: 13))
-                            .foregroundStyle(ink.opacity(0.78))
-                            .lineLimit(1)
+                if nextCount > 0 {
+                    VStack(alignment: .leading, spacing: 3) {
+                        ForEach(Array(snap.items.dropFirst().prefix(nextCount)), id: \.id) { line in
+                            Text(line.text)
+                                .font(.system(size: 12.5))
+                                .foregroundStyle(ink.opacity(0.66))
+                                .lineLimit(1)
+                        }
                     }
+                    .padding(.leading, 26)
+                    .padding(.top, 6)
                 }
             } else {
-                Text(snap.left > 0 ? "続きはアプリで" : "ぜんぶ済みました")
+                Text(snap.left > 0 ? "続きはアプリで" : "ぜんぶ完了しました")
                     .font(topFont)
                     .foregroundStyle(ink)
                 Text("押すと、次の1行を書けます")
                     .font(.system(size: 12))
                     .foregroundStyle(ink.opacity(0.62))
+                    .padding(.top, 2)
             }
             Spacer(minLength: 0)
         }

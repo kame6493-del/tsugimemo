@@ -49,13 +49,14 @@ try {
   $tasks = if ($DebugOnly) { @(':app:assembleDebug') } else { @(':app:assembleRelease', ':app:bundleRelease') }
   $p = Start-Process -FilePath "$proj\gradlew.bat" -ArgumentList ($tasks + @('--no-daemon', '-q')) -WorkingDirectory $proj -NoNewWindow -Wait -PassThru -RedirectStandardError "$env:TEMP\tm_gradle_err.txt"
   if ($p.ExitCode -ne 0) { Get-Content "$env:TEMP\tm_gradle_err.txt" -Tail 40; throw "Gradle が失敗しました (exit $($p.ExitCode))" }
+  $ver = ([regex]::Match((Get-Content (Join-Path $repo 'android\app\build.gradle') -Raw), 'versionName "([^"]+)"')).Groups[1].Value
   $out = Join-Path $repo 'releases'
   New-Item -ItemType Directory -Force $out | Out-Null
   if ($DebugOnly) {
     Copy-Item "$proj\app\build\outputs\apk\debug\app-debug.apk" "$out\tsugimemo-debug.apk" -Force
   } else {
-    Copy-Item "$proj\app\build\outputs\bundle\release\app-release.aab" "$out\tsugimemo-1.0.0-release.aab" -Force
-    Copy-Item "$proj\app\build\outputs\apk\release\app-release.apk" "$out\tsugimemo-1.0.0-release.apk" -Force
+    Copy-Item "$proj\app\build\outputs\bundle\release\app-release.aab" "$out\tsugimemo-$ver-release.aab" -Force
+    Copy-Item "$proj\app\build\outputs\apk\release\app-release.apk" "$out\tsugimemo-$ver-release.apk" -Force
   }
   Write-Output "出力: $out"
 } finally {

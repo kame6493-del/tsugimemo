@@ -20,7 +20,7 @@ struct TsugiLiveActivity: Widget {
                             .padding(6)
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("済んだ")
+                    .accessibilityLabel("完了")
                 }
                 DynamicIslandExpandedRegion(.center) {
                     Text(context.state.top)
@@ -60,6 +60,7 @@ struct TsugiLiveActivity: Widget {
     }
 }
 
+/// ロック画面に出す紙の札(見本②: 黄色いピン、「つぎにやること」、大きな1行、右に押せる丸)
 struct LiveLockView: View {
     let list: String
     let state: TsugiActivityAttributes.ContentState
@@ -67,44 +68,45 @@ struct LiveLockView: View {
     var body: some View {
         let ink = Color(hex: state.ink)
         let mark = Color(hex: state.mark)
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text(list)
-                    .font(.system(size: 13, weight: .semibold))
-                Spacer()
-                Text("のこり \(state.left)")
-                    .font(.system(size: 13).monospacedDigit())
-            }
-            .foregroundStyle(ink.opacity(0.62))
+        ZStack(alignment: .topLeading) {
             HStack(alignment: .center, spacing: 10) {
-                Button(intent: DoneLiveIntent(itemId: state.topId)) {
-                    Circle()
-                        .strokeBorder(mark, lineWidth: 3)
-                        .frame(width: 28, height: 28)
-                        .padding(8)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .padding(.leading, -8)
-                .accessibilityLabel("済んだ")
-                Text(state.top)
-                    .font(.system(size: 22, weight: .bold))
-                    .foregroundStyle(ink)
-                    .lineLimit(2)
-            }
-            if !state.next.isEmpty {
-                Rectangle().fill(ink.opacity(0.18)).frame(height: 1)
-                VStack(alignment: .leading, spacing: 4) {
-                    ForEach(state.next, id: \.self) { t in
-                        Text(t)
-                            .font(.system(size: 15))
-                            .foregroundStyle(ink.opacity(0.8))
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(list == "ツギメモ" ? "つぎにやること" : "つぎにやること・\(list)")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(ink.opacity(0.5))
+                        .lineLimit(1)
+                    Text(state.top)
+                        .font(.system(size: 21, weight: .bold))
+                        .foregroundStyle(ink)
+                        .lineLimit(2)
+                    if let n = state.next.first {
+                        Text("つぎ  \(n)")
+                            .font(.system(size: 13))
+                            .foregroundStyle(ink.opacity(0.6))
                             .lineLimit(1)
                     }
                 }
+                Spacer(minLength: 0)
+                Button(intent: DoneLiveIntent(itemId: state.topId)) {
+                    Circle()
+                        .strokeBorder(mark, lineWidth: 3)
+                        .frame(width: 44, height: 44)
+                        .padding(6)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("完了")
             }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 16)
+
+            Circle()
+                .fill(Color(red: 0.90, green: 0.71, blue: 0.18))
+                .frame(width: 12, height: 12)
+                .shadow(color: .black.opacity(0.3), radius: 1, y: 1)
+                .padding(.leading, 26)
+                .padding(.top, 5)
+                .accessibilityHidden(true)
         }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 14)
     }
 }

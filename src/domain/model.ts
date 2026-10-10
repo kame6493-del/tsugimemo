@@ -30,36 +30,51 @@ export type List = {
   daily: boolean;
 };
 
-export type PaperId = 'kinari' | 'sumi' | 'shiro' | 'sakura' | 'wakatake' | 'ai';
+export type PaperId = 'milk' | 'lemon' | 'soda' | 'sakura' | 'mint' | 'gray';
 
 export type AppData = {
   v: 1;
   lists: List[];
   /** ロック画面に出すリスト */
   lockListId: string;
-  /** 毎朝もどす時刻(0〜23時) */
+  /** 毎朝戻す時刻(0〜23時) */
   resetHour: number;
-  /** 最後に毎朝もどすを行った日(resetHour 区切りの日付) */
+  /** 最後に毎朝戻すを行った日(resetHour 区切りの日付) */
   lastResetDay: string;
   paper: PaperId;
   onboarded: boolean;
   /** iOS: ライブアクティビティ / Android: ロック画面のお知らせ */
   bigOnLock: boolean;
-  /** 済ませた合計(評価のお願いを出す時期に使う) */
+  /** 完了した合計(評価のお願いを出す時期に使う) */
   doneCount: number;
   reviewAsked: boolean;
 };
 
-export const FREE_PAPERS: PaperId[] = ['kinari', 'sumi'];
+/** 無料で使える紙(見本の「無料版とツギメモ+のちがい」: 紙の色 1色(ミルク)) */
+export const FREE_PAPERS: PaperId[] = ['milk'];
 
-export const PAPERS: { id: PaperId; name: string; bg: string; ink: string; mark: string }[] = [
-  { id: 'kinari', name: '生成り', bg: '#F4EFE4', ink: '#22201C', mark: '#C8402A' },
-  { id: 'sumi', name: '墨', bg: '#1E1D1B', ink: '#EFEAE0', mark: '#E8664E' },
-  { id: 'shiro', name: '白', bg: '#FFFFFF', ink: '#1A1A1A', mark: '#C8402A' },
-  { id: 'sakura', name: '桜鼠', bg: '#EBDCD9', ink: '#3A2B2A', mark: '#B2402F' },
-  { id: 'wakatake', name: '若竹', bg: '#DCE6D6', ink: '#1F2C22', mark: '#2F6B45' },
-  { id: 'ai', name: '藍', bg: '#22324A', ink: '#E9EEF5', mark: '#F0A35B' },
+/** 文字と丸の色(見本のカラートークン: テキスト #1F2937・メイン) */
+export const INK = '#1F2937';
+export const BLUE = '#3B84E6';
+
+/** 紙の6色。色は見本のカラートークン(さくらは見本の色見本から取った) */
+export const PAPERS: { id: PaperId; name: string; bg: string }[] = [
+  { id: 'milk', name: 'ミルク', bg: '#FEFBF3' },
+  { id: 'lemon', name: 'レモン', bg: '#FFF7D6' },
+  { id: 'soda', name: 'ソーダ', bg: '#E3F2FF' },
+  { id: 'sakura', name: 'さくら', bg: '#FBE4E1' },
+  { id: 'mint', name: 'ミント', bg: '#EBF7EA' },
+  { id: 'gray', name: 'グレー', bg: '#EAEAEA' },
 ];
+
+/** 1.0 の紙の名前 → 近い色(生成り・白→ミルク、墨→グレー、桜鼠→さくら、若竹→ミント、藍→ソーダ) */
+const OLD_PAPERS: Record<string, PaperId> = { kinari: 'milk', shiro: 'milk', sumi: 'gray', sakura: 'sakura', wakatake: 'mint', ai: 'soda' };
+
+export function readPaper(x: unknown): PaperId {
+  if (typeof x !== 'string') return 'milk';
+  if (PAPERS.some((p) => p.id === x)) return x as PaperId;
+  return OLD_PAPERS[x] ?? 'milk';
+}
 
 let seq = 0;
 export function newId(now: number): string {
@@ -75,7 +90,7 @@ export function emptyData(now = Date.now()): AppData {
     lockListId: id,
     resetHour: 4,
     lastResetDay: dayKey(now, 4),
-    paper: 'kinari',
+    paper: 'milk',
     onboarded: false,
     bigOnLock: false,
     doneCount: 0,
@@ -199,6 +214,32 @@ export function dailyReset(d: AppData, now: number): AppData {
   return { ...d, lists, lastResetDay: today };
 }
 
+// ---------- 履歴(完了と削除を7日) ----------
+
+export type HistoryEntry = { kind: 'done' | 'deleted'; at: number; item: Item; list: List };
+
+/** 完了と削除を新しい順に。削除した行は削除として出す(完了してから消した行も) */
+export function historyOf(d: AppData): HistoryEntry[] {
+  const out: HistoryEntry[] = [];
+  for (const l of d.lists) {
+    for (const i of l.items) {
+      if (i.deletedAt) out.push({ kind: 'deleted', at: i.deletedAt, item: i, list: l });
+      else if (i.done) out.push({ kind: 'done', at: i.doneAt ?? i.editedAt, item: i, list: l });
+    }
+  }
+  return out.sort((a, b) => b.at - a.at);
+}
+
+/** 自動で消えるまでの残り日数(7日目の終わりまで)。0 なら今日で消える */
+export function daysLeft(at: number, now: number): number {
+  return Math.max(0, KEEP_DAYS - 1 - Math.floor((now - at) / DAY));
+}
+
+/** 履歴から元に戻す。完了は未完了へ、削除は未完了で元のリストへ */
+export function restoreEntry(d: AppData, listId: string, itemId: string, now: number): AppData {
+  return restoreItem(d, listId, itemId, now);
+}
+
 // ---------- リスト(ツギメモ+) ----------
 
 export function addList(d: AppData, name: string, now: number, id = newId(now)): AppData {
@@ -225,7 +266,7 @@ export function setDaily(d: AppData, listId: string, daily: boolean): AppData {
 
 /** 課金が切れた・無い時に使える範囲へ戻す(データは消さない。出すリストと紙だけ無料の物へ) */
 export function clampToFree(d: AppData): AppData {
-  const paper = FREE_PAPERS.includes(d.paper) ? d.paper : 'kinari';
+  const paper = FREE_PAPERS.includes(d.paper) ? d.paper : 'milk';
   const lockListId = d.lists[0].id;
   if (paper === d.paper && lockListId === d.lockListId) return d;
   return { ...d, paper, lockListId };
@@ -236,6 +277,7 @@ export function clampToFree(d: AppData): AppData {
 /** ウィジェット・ライブアクティビティ・Android のお知らせに渡す物。App Group / SharedPreferences に JSON で置く */
 export type Snapshot = {
   v: 1;
+  /** ウィジェットの上に出す名前。リストが1つなら「ツギメモ」、2つ以上ならリストの名前 */
   list: string;
   /** 済んでいない行。先頭が「いま」。最大6行 */
   items: { id: string; text: string }[];
@@ -253,11 +295,11 @@ export function snapshotOf(d: AppData, now: number): Snapshot {
   const p = PAPERS.find((x) => x.id === d.paper) ?? PAPERS[0];
   return {
     v: 1,
-    list: l.name,
+    list: d.lists.length > 1 ? l.name : 'ツギメモ',
     items: pend.slice(0, 6).map((i) => ({ id: i.id, text: i.text })),
     left: pend.length,
     doneToday,
-    paper: { bg: p.bg, ink: p.ink, mark: p.mark, dark: p.id === 'sumi' || p.id === 'ai' },
+    paper: { bg: p.bg, ink: INK, mark: BLUE, dark: false },
     updatedAt: now,
   };
 }
@@ -310,7 +352,7 @@ export function normalize(raw: unknown, now = Date.now()): AppData {
   if (!lists.length) lists.push(base.lists[0]);
   const lockListId = typeof raw.lockListId === 'string' && lists.some((l) => l.id === raw.lockListId) ? raw.lockListId : lists[0].id;
   const resetHour = typeof raw.resetHour === 'number' && raw.resetHour >= 0 && raw.resetHour <= 23 ? Math.floor(raw.resetHour) : 4;
-  const paper = PAPERS.some((p) => p.id === raw.paper) ? (raw.paper as PaperId) : 'kinari';
+  const paper = readPaper(raw.paper);
   return {
     v: 1,
     lists,

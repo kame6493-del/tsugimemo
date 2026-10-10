@@ -93,7 +93,7 @@ def widget_settings(debug):
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = jp.tsugimemo.app.widget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -182,11 +182,11 @@ def main():
     s = insert_section_items(s, "XCConfigurationList",
         f"\t\t{CL_WIDGET} /* Build configuration list for PBXNativeTarget \"TsugiWidget\" */ = {{\n\t\t\tisa = XCConfigurationList;\n\t\t\tbuildConfigurations = (\n\t\t\t\t{C_W_DEBUG} /* Debug */,\n\t\t\t\t{C_W_RELEASE} /* Release */,\n\t\t\t);\n\t\t\tdefaultConfigurationIsVisible = 0;\n\t\t\tdefaultConfigurationName = Release;\n\t\t}};\n")
 
-    # App ターゲット: App Group の権限、iOS 17 以降、iPhone だけ、版 1.0.0
+    # App ターゲット: App Group の権限、iOS 17 以降、iPhone だけ、版 1.1.0
     for cfg in (APP_CFG_DEBUG, APP_CFG_RELEASE):
         s = set_setting(s, cfg, "CODE_SIGN_ENTITLEMENTS", "App/App.entitlements")
         s = set_setting(s, cfg, "IPHONEOS_DEPLOYMENT_TARGET", "17.0")
-        s = set_setting(s, cfg, "MARKETING_VERSION", "1.0.0")
+        s = set_setting(s, cfg, "MARKETING_VERSION", "1.1.0")
         s = set_setting(s, cfg, "TARGETED_DEVICE_FAMILY", "1")
     for cfg in ("504EC3141FED79650016851F", "504EC3151FED79650016851F"):
         s = set_setting(s, cfg, "IPHONEOS_DEPLOYMENT_TARGET", "17.0")

@@ -1,47 +1,71 @@
 import { useState } from 'react';
 import { APP_CONFIG } from '../config';
-import { cleanText, deletedItems, MAX_LISTS, removeList, renameList, restoreItem, setDaily, type List } from '../domain/model';
-import { tap } from '../platform/native';
+import { cleanText, historyOf, MAX_LISTS, PAPERS, removeList, renameList, setDaily, type List } from '../domain/model';
+import { isAndroid, tap } from '../platform/native';
 import type { Ctx } from './ctx';
-import { IconChevronRight, IconPlus } from './Icons';
-import { ListSheet, Sheet } from './Sheets';
+import {
+  IconChevronRight, IconHistory, IconLock, IconMail, IconPalette, IconPlus, IconReplay, IconShield, IconStore, IconSun,
+} from './Icons';
+import { Confirm, LIST_DOTS, ListSheet, Sheet } from './Sheets';
+import { TopNav } from './TopNav';
 
 export function SettingsScreen({ ctx, onReplayIntro, onRestore }: { ctx: Ctx; onReplayIntro: () => void; onRestore: () => Promise<void> }) {
-  const { data, setData, plus, openPaywall, toast } = ctx;
+  const { data, setData, plus, openPaywall, toast, go, openPapers } = ctx;
   const [renaming, setRenaming] = useState<List | null>(null);
-  const [trashOpen, setTrashOpen] = useState(false);
   const [adding, setAdding] = useState(false);
-  const trash = data.lists.flatMap((l) => deletedItems(l).map((i) => ({ list: l, item: i })));
+  const paper = PAPERS.find((p) => p.id === data.paper) ?? PAPERS[0];
+  const hist = historyOf(data).length;
 
   return (
-    <div className="settings">
-      <header className="head"><h1 className="title">設定</h1></header>
+    <div className="subscreen settings">
+      <TopNav ctx={ctx} current="settings" />
 
-      <section className="group">
-        {plus ? (
-          <p className="plusrow pad"><span className="tag shu">ツギメモ+</span>使っています。ありがとうございます。</p>
-        ) : (
-          <button type="button" className="row-link" onClick={() => openPaywall('settings')}>
-            <span className="rl-main">
-              <span className="rl-title">ツギメモ+</span>
-              <span className="rl-sub">リストを増やす・毎朝もどす・紙の色。買い切りです。</span>
+      {plus ? (
+        <p className="plusrow"><span className="plusmark">ツギメモ<b>+</b></span>使っています。ありがとうございます。</p>
+      ) : (
+        <button type="button" className="plusbanner" onClick={() => openPaywall('settings')}>
+          <span className="pb-main">
+            <span className="pb-title">ツギメモ<b>+</b></span>
+            <span className="pb-sub">8つまでのリスト・毎朝戻るリスト・紙の色6色。買い切りです。</span>
+          </span>
+          <IconChevronRight />
+        </button>
+      )}
+
+      <section className="sec">
+        <h2 className="sec-title">表示</h2>
+        <div className="card">
+          <button type="button" className="navrow" onClick={() => { tap(); go('display'); }}>
+            <span className="sec-icon"><IconLock size={18} /></span>
+            <span className="nav-main">
+              <span className="nav-title">表示場所</span>
+              <span className="nav-sub">{isAndroid ? 'ロック画面のお知らせ・ホーム画面のウィジェット' : 'ロック画面・ホーム画面のウィジェット'}</span>
             </span>
+            <span className="nav-val">{data.bigOnLock ? (isAndroid ? 'お知らせ オン' : '大きく オン') : ''}</span>
             <IconChevronRight />
           </button>
-        )}
+          <button type="button" className="navrow" onClick={() => { tap(); openPapers(); }}>
+            <span className="sec-icon"><IconPalette size={18} /></span>
+            <span className="nav-main"><span className="nav-title">紙の色</span></span>
+            <img className="nav-paper" src={`./img/paper_${paper.id}.png`} alt="" />
+            <span className="nav-val">{paper.name}</span>
+            <IconChevronRight />
+          </button>
+        </div>
       </section>
 
-      <section className="group" aria-labelledby="lists">
-        <h2 id="lists" className="eyebrow pad">リスト</h2>
-        <ul className="setlist">
-          {data.lists.map((l) => (
+      <section className="sec" aria-labelledby="lists">
+        <h2 id="lists" className="sec-title">リスト</h2>
+        <ul className="card setlist">
+          {data.lists.map((l, i) => (
             <li key={l.id} className="setrow">
               <button type="button" className="setname" onClick={() => { tap(); setRenaming(l); }} aria-label={`${l.name} の名前を変える`}>
-                <span>{l.name}</span>
+                <span className="dot" style={{ background: LIST_DOTS[i % LIST_DOTS.length] }} />
+                <span className="list-name">{l.name}</span>
                 {l.id === data.lockListId && <span className="tag">ロック画面</span>}
               </button>
               <label className="mini-switch">
-                <span>毎朝もどす</span>
+                <span>毎朝戻す</span>
                 <input
                   type="checkbox"
                   role="switch"
@@ -56,56 +80,72 @@ export function SettingsScreen({ ctx, onReplayIntro, onRestore }: { ctx: Ctx; on
               </label>
             </li>
           ))}
+          {data.lists.length < MAX_LISTS && (
+            <li>
+              <button type="button" className="add-row" onClick={() => { if (!plus) { openPaywall('lists'); return; } tap(); setAdding(true); }}>
+                <IconPlus /><span>新しいリストを作成</span>{!plus && <span className="tag plus">ツギメモ+</span>}
+              </button>
+            </li>
+          )}
         </ul>
-        {data.lists.length < MAX_LISTS && (
-          <button type="button" className="action" onClick={() => { if (!plus) { openPaywall('lists'); return; } tap(); setAdding(true); }}>
-            <IconPlus /><span>リストを足す</span>{!plus && <span className="tag shu">ツギメモ+</span>}
+        <div className="card">
+          <label className="selectrow">
+            <span className="sec-icon"><IconSun size={18} /></span>
+            <span className="nav-main"><span className="nav-title">毎朝戻す時刻</span><span className="nav-sub">「毎朝戻す」のリストは、この時刻に完了の印が外れます</span></span>
+            <select
+              value={data.resetHour}
+              aria-label="毎朝戻す時刻"
+              onChange={(e) => {
+                if (!plus) { openPaywall('daily'); return; }
+                setData((d) => ({ ...d, resetHour: Number(e.target.value) }));
+              }}
+            >
+              {Array.from({ length: 24 }, (_, h) => <option key={h} value={h}>{h}時</option>)}
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <section className="sec">
+        <h2 className="sec-title">もしもの時</h2>
+        <div className="card">
+          <button type="button" className="navrow" onClick={() => { tap(); go('history'); }}>
+            <span className="sec-icon"><IconHistory size={18} /></span>
+            <span className="nav-main"><span className="nav-title">履歴</span><span className="nav-sub">完了と削除は7日間戻せます。いま <span className="num">{hist}</span> 件</span></span>
+            <IconChevronRight />
           </button>
-        )}
-        <label className="selectrow">
-          <span>毎朝もどす時刻</span>
-          <select
-            value={data.resetHour}
-            onChange={(e) => {
-              if (!plus) { openPaywall('daily'); return; }
-              setData((d) => ({ ...d, resetHour: Number(e.target.value) }));
-            }}
-          >
-            {Array.from({ length: 24 }, (_, h) => <option key={h} value={h}>{h}時</option>)}
-          </select>
-        </label>
+          <button type="button" className="navrow" onClick={() => { tap(); onRestore(); }}>
+            <span className="sec-icon"><IconStore size={18} /></span>
+            <span className="nav-main"><span className="nav-title">購入を戻す</span><span className="nav-sub">機種変更の後などに</span></span>
+            <IconChevronRight />
+          </button>
+        </div>
       </section>
 
-      <section className="group" aria-labelledby="keep">
-        <h2 id="keep" className="eyebrow pad">もしもの時</h2>
-        <button type="button" className="row-link" onClick={() => { tap(); setTrashOpen(true); }}>
-          <span className="rl-main">
-            <span className="rl-title">消したもの</span>
-            <span className="rl-sub">7日のあいだ戻せます。いま <span className="num">{trash.length}</span> 行</span>
-          </span>
-          <IconChevronRight />
-        </button>
-        <button type="button" className="row-link" onClick={() => { tap(); onRestore(); }}>
-          <span className="rl-main"><span className="rl-title">購入を戻す</span><span className="rl-sub">機種変更の後などに</span></span>
-          <IconChevronRight />
-        </button>
-      </section>
-
-      <section className="group" aria-labelledby="about">
-        <h2 id="about" className="eyebrow pad">このアプリ</h2>
-        <button type="button" className="row-link" onClick={() => { tap(); onReplayIntro(); }}>
-          <span className="rl-main"><span className="rl-title">最初の説明をもう一度見る</span></span>
-          <IconChevronRight />
-        </button>
-        <a className="row-link" href={APP_CONFIG.supportUrl} target="_blank" rel="noopener noreferrer">
-          <span className="rl-main"><span className="rl-title">不具合・ご要望を送る</span><span className="rl-sub">サポートのページが開きます</span></span>
-          <IconChevronRight />
-        </a>
-        <a className="row-link" href={APP_CONFIG.privacyUrl} target="_blank" rel="noopener noreferrer">
-          <span className="rl-main"><span className="rl-title">プライバシーポリシー</span><span className="rl-sub">書いた物は端末の外に出ません</span></span>
-          <IconChevronRight />
-        </a>
-        <p className="version pad num">ツギメモ {APP_CONFIG.version}</p>
+      <section className="sec">
+        <h2 className="sec-title">このアプリ</h2>
+        <div className="card">
+          <button type="button" className="navrow" onClick={() => { tap(); onReplayIntro(); }}>
+            <span className="sec-icon"><IconReplay size={18} /></span>
+            <span className="nav-main"><span className="nav-title">はじめての説明をもう一度見る</span></span>
+            <IconChevronRight />
+          </button>
+          <a className="navrow" href={APP_CONFIG.supportUrl} target="_blank" rel="noopener noreferrer">
+            <span className="sec-icon"><IconMail size={18} /></span>
+            <span className="nav-main"><span className="nav-title">不具合・ご要望を送る</span><span className="nav-sub">サポートのページが開きます</span></span>
+            <IconChevronRight />
+          </a>
+          <a className="navrow" href={APP_CONFIG.privacyUrl} target="_blank" rel="noopener noreferrer">
+            <span className="sec-icon"><IconShield size={18} /></span>
+            <span className="nav-main"><span className="nav-title">プライバシーポリシー</span><span className="nav-sub">書いた物は端末の外に出ません</span></span>
+            <IconChevronRight />
+          </a>
+        </div>
+        <div className="about">
+          <img src="./img/app_icon.png" alt="" />
+          <p><b>ツギメモ</b><span className="num">{APP_CONFIG.version}</span></p>
+          <p className="note">登録なし・広告なし</p>
+        </div>
       </section>
 
       {renaming && (
@@ -113,33 +153,13 @@ export function SettingsScreen({ ctx, onReplayIntro, onRestore }: { ctx: Ctx; on
           list={renaming}
           canDelete={data.lists.length > 1}
           onClose={() => setRenaming(null)}
-          onSave={(n) => { setData((d) => renameList(d, renaming.id, n)); setRenaming(null); tap(); }}
+          onSave={(n) => { setData((d) => renameList(d, renaming.id, n)); setRenaming(null); tap(); toast({ text: '名前を変えました', kind: 'ok' }); }}
           onDelete={() => {
             setData((d) => removeList(d, renaming.id));
             setRenaming(null);
-            toast({ text: `「${renaming.name}」を消しました` });
+            toast({ text: `「${renaming.name}」を削除しました`, kind: 'info' });
           }}
         />
-      )}
-
-      {trashOpen && (
-        <Sheet title="消したもの" onClose={() => setTrashOpen(false)}>
-          {trash.length === 0 ? (
-            <p className="sheet-text">消した行はありません。消した行と、済んだ行をまとめて片づけた分は、ここに7日残ります。</p>
-          ) : (
-            <ul className="rows trash">
-              {trash.map(({ list, item }) => (
-                <li key={item.id} className="row">
-                  <span className="rowtext static">
-                    {item.text}
-                    {data.lists.length > 1 && <small className="from">{list.name}</small>}
-                  </span>
-                  <button type="button" className="btn ghost sm" onClick={() => { tap(); setData((d) => restoreItem(d, list.id, item.id, Date.now())); }}>戻す</button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Sheet>
       )}
 
       {adding && (
@@ -156,15 +176,22 @@ function RenameSheet({ list, canDelete, onClose, onSave, onDelete }: { list: Lis
     <Sheet title="リストの名前" onClose={onClose}>
       <form onSubmit={(e) => { e.preventDefault(); if (cleanText(n)) onSave(n); }}>
         <input className="field line" value={n} maxLength={12} aria-label="リストの名前" onChange={(e) => setN(e.target.value)} />
-        <div className="sheet-foot">
-          <button type="submit" className="btn primary wide" disabled={!cleanText(n) || cleanText(n) === list.name}>名前を変える</button>
-          {canDelete && (confirm ? (
-            <button type="button" className="btn danger wide" onClick={onDelete}>中の行ごと消す</button>
-          ) : (
-            <button type="button" className="btn text danger-text" onClick={() => setConfirm(true)}>このリストを消す</button>
-          ))}
+        <div className="sheet-btns">
+          {canDelete && <button type="button" className="btn soft danger-text" onClick={() => setConfirm(true)}>削除</button>}
+          <button type="button" className="btn soft" onClick={onClose}>キャンセル</button>
+          <button type="submit" className="btn primary" disabled={!cleanText(n) || cleanText(n) === list.name}>保存</button>
         </div>
       </form>
+      {confirm && (
+        <Confirm
+          danger
+          title="このリストを削除しますか?"
+          body={<>「{list.name}」と、中のメモをまとめて削除します。</>}
+          ok="中のメモごと削除"
+          onOk={onDelete}
+          onCancel={() => setConfirm(false)}
+        />
+      )}
     </Sheet>
   );
 }
