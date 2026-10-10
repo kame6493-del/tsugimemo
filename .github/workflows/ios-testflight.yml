@@ -15,10 +15,10 @@ on:
         type: boolean
         default: true
       sign_at:
-        description: "署名する時点。archive(既定・App Group 向き)/ export(お手本と同じ道)"
+        description: "署名する時点。adhoc(既定・デバイス不要)/ archive(要デバイス)/ export(権限が落ちる)"
         type: choice
-        options: [archive, export]
-        default: archive
+        options: [adhoc, archive, export]
+        default: adhoc
 
 jobs:
   testflight:
@@ -93,6 +93,13 @@ jobs:
             CODE_SIGN_STYLE=Automatic \
             CURRENT_PROJECT_VERSION="$GITHUB_RUN_NUMBER"
 
+      # デバイスが無くても通る道: ad-hoc 署名でアーカイブ(App Group などの権限が署名の中に残る)→ 書き出しで App Store 用にクラウド署名
+      - name: Archive (ad-hoc signed)
+        if: ${{ !inputs.compile_only && inputs.sign_at == 'adhoc' }}
+        run: |
+          xcodebuild archive             -project "$PROJECT"             -scheme App             -configuration Release             -destination 'generic/platform=iOS'             -archivePath "$RUNNER_TEMP/App.xcarchive"             DEVELOPMENT_TEAM="$APPLE_TEAM_ID"             CODE_SIGN_STYLE=Manual             CODE_SIGN_IDENTITY=-             AD_HOC_CODE_SIGNING_ALLOWED=YES             CODE_SIGNING_REQUIRED=NO             PROVISIONING_PROFILE_SPECIFIER=             CURRENT_PROJECT_VERSION="$GITHUB_RUN_NUMBER"
+          codesign -d --entitlements :- "$RUNNER_TEMP/App.xcarchive/Products/Applications/App.app" || true
+
       # 予備: お手本(DIAMOND NINE・ニガテ帳)で動いた、署名なしアーカイブ→書き出しで署名
       - name: Archive (unsigned)
         if: ${{ !inputs.compile_only && inputs.sign_at == 'export' }}
@@ -113,6 +120,21 @@ jobs:
           ls "$RUNNER_TEMP/App.xcarchive/Products/Applications/App.app/PlugIns/TsugiWidget.appex" || { echo "::error::TsugiWidget.appex がアーカイブに入っていません"; exit 1; }
           codesign -d --entitlements :- "$RUNNER_TEMP/App.xcarchive/Products/Applications/App.app" 2>/dev/null | grep -q "group.jp.tsugimemo.app" \
             && echo "App Group の権限あり" || echo "::warning::本体の署名に App Group が見当たりません(sign_at=export の時は書き出しで付く想定)"
+
+      # まず手元に書き出して、ipa の中の権限を確かめる(足りなければアップロードしない)
+      - name: Export locally and check entitlements
+        if: ${{ !inputs.compile_only }}
+        run: |
+          cp ios/ExportOptions.plist "$RUNNER_TEMP/ExportLocal.plist"
+          plutil -replace teamID -string "$APPLE_TEAM_ID" "$RUNNER_TEMP/ExportLocal.plist"
+          plutil -replace destination -string export "$RUNNER_TEMP/ExportLocal.plist"
+          xcodebuild -exportArchive             -archivePath "$RUNNER_TEMP/App.xcarchive"             -exportOptionsPlist "$RUNNER_TEMP/ExportLocal.plist"             -exportPath "$RUNNER_TEMP/local"             -allowProvisioningUpdates             -authenticationKeyPath "$RUNNER_TEMP/keys/AuthKey_$ASC_KEY_ID.p8"             -authenticationKeyID "$ASC_KEY_ID"             -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+          mkdir -p "$RUNNER_TEMP/ipa" && cd "$RUNNER_TEMP/ipa" && unzip -q "$RUNNER_TEMP"/local/*.ipa
+          codesign -d --entitlements :- Payload/App.app | tee "$RUNNER_TEMP/app_ent.plist"
+          codesign -d --entitlements :- Payload/App.app/PlugIns/TsugiWidget.appex | tee "$RUNNER_TEMP/ext_ent.plist"
+          grep -q "group.jp.tsugimemo.app" "$RUNNER_TEMP/app_ent.plist" || { echo "::error::本体に App Group がありません"; exit 1; }
+          grep -q "group.jp.tsugimemo.app" "$RUNNER_TEMP/ext_ent.plist" || { echo "::error::ウィジェットに App Group がありません"; exit 1; }
+          grep -q "get-task-allow</key>\s*<true" "$RUNNER_TEMP/app_ent.plist" && { echo "::error::開発用の署名になっています"; exit 1; } || true
 
       - name: Export and upload to TestFlight
         if: ${{ !inputs.compile_only }}
