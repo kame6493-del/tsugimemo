@@ -36,7 +36,7 @@
 3. Playwright E2E(scripts/e2e.py)ALL PASS 534項目。375・430 × ライト・ダーク、Android 向け 412 × ライト・ダーク。はじめての流れ → 足す → 完了(青いチェック→次が上がる)→ 戻す → ウィジェットで完了 → 編集 → 左スワイプで削除と戻す → 取っ手と長押しで並べ替え → タブ → 履歴から元に戻す → 表示場所(大きく出す・断られた時)→ 紙の色(無料はミルクだけ)→ ツギメモ+ → リストを作る・出すリストを替える・紙の色 → 毎朝戻す → 大きい文字 → 開き直し → 空の状態。横はみ出し・英語の取り残し・Android に iPhone だけの物が出ないこと・コンソールのエラーも毎回
 4. 画面写真は全部 Read で見た。見本と並べた物: docs/compare_1〜8.png(見本8枚それぞれ)・docs/compare_icon.png・一覧 docs/compare_all.png
 5. Android: versionCode 2 / versionName 1.1.0。releases/tsugimemo-1.1.0-release.aab(8.2MB)と確認用 APK。1.0.0 と同じ鍵で、証明書の SHA-256 が同じ(ED:64:BF:D7:…:1F:C6:B6:1C)ことを keytool で確かめた
-6. iOS: Actions の compile_only で、ウィジェット込みのコンパイルを確かめた(結果は下の「iOS」)
+6. iOS: GitHub Actions「iOS TestFlight」を compile_only で流し、ウィジェット拡張(TsugiWidget.appex)込みでコンパイル成功(run 38021986472、Xcode 26.6)
 7. ストア素材: store/iphone/iphone_1〜6.png(1290x2796)、store/play/play_1〜6.png(1080x1920)、store/play/feature_1024x500.png、store/icon_1024.png、store/play/icon_512.png。scripts/make_store.py。値段・「無料」は写していない。Play 用は Android 向けで撮り、iPhone だけの物は写していない。1.0 の物は store/_v1_backup2/
 
 
